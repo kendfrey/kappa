@@ -1,0 +1,107 @@
+:root {
+	--highlight-1: color(from var(--fg) srgb r g b / 0.1);
+	--highlight-2: color(from var(--fg) srgb r g b / 0.25);
+	--ui-unit: 32px;
+	--border: 1px solid var(--highlight-2);
+	--border-radius: calc(var(--ui-unit) / 2);
+	--gap: calc(var(--ui-unit) / 4);
+	background-color: var(--bg);
+	color: var(--fg);
+	font-family: system-ui, sans-serif;
+}
+
+.flex {
+	display: flex;
+	gap: var(--gap);
+
+	&.column {
+		flex-direction: column;
+	}
+}
+
+.divider {
+	flex-basis: 1px;
+	background-color: var(--highlight-2);
+}
+
+button, select, option, #menu > * {
+	&:hover {
+		background-color: var(--highlight-1);
+	}
+
+	&:active {
+		background-color: var(--highlight-2);
+	}
+}
+
+button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--ui-unit);
+	height: var(--ui-unit);
+	padding: 0;
+	border: var(--border);
+	border-radius: var(--border-radius);
+	background-color: inherit;
+	color: inherit;
+	cursor: pointer;
+}
+
+select {
+	appearance: base-select;
+	width: 240px;
+	height: var(--ui-unit);
+	padding-right: var(--gap);
+	padding-left: var(--gap);
+	border: var(--border);
+	border-radius: var(--border-radius);
+	background-color: inherit;
+	color: inherit;
+}
+
+::picker(select) {
+	appearance: base-select;
+	border: var(--border);
+	border-radius: var(--border-radius);
+	background-color: var(--bg);
+	color: var(--fg);
+}
+
+option {
+	height: var(--ui-unit);
+	padding-right: var(--gap);
+	padding-left: var(--gap);
+	border-radius: var(--border-radius);
+
+	&::checkmark {
+		display: none;
+	}
+}
+
+label {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.menu {
+	width: 200px;
+	margin: 0;
+	position-area: span-bottom right;
+	border: var(--border);
+	border-radius: var(--border-radius);
+	background-color: var(--bg);
+	color: inherit;
+	cursor: default;
+
+	& > * {
+		display: flex;
+		align-items: center;
+		height: var(--ui-unit);
+		padding-right: var(--gap);
+		padding-left: var(--gap);
+		gap: var(--gap);
+		border-radius: var(--border-radius);
+	}
+}

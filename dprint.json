@@ -16,7 +16,7 @@
 	"markdown": {
 		"emphasisKind": "asterisks"
 	},
-	"malva": {},
+	"malva": { "declarationOrder": "smacss" },
 	"markup": {},
 	"excludes": [
 		"**/node_modules",

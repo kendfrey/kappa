@@ -1,0 +1,12 @@
+.colour-input {
+	border: var(--border);
+	border-radius: var(--border-radius);
+
+	input[type="color"] {
+		width: var(--ui-unit);
+		height: var(--ui-unit);
+		border-radius: var(--border-radius);
+		cursor: pointer;
+		opacity: 0;
+	}
+}

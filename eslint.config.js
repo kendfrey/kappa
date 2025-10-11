@@ -21,4 +21,13 @@ export default defineConfig([globalIgnores(["dist"]), {
 			tsconfigRootDir: import.meta.dirname,
 		},
 	},
+	rules: {
+		"@typescript-eslint/no-unused-vars": ["warn", {
+			argsIgnorePattern: "^_",
+			varsIgnorePattern: "^_",
+			caughtErrorsIgnorePattern: "^_",
+			destructuredArrayIgnorePattern: "^_",
+			reportUsedIgnorePattern: true,
+		}],
+	},
 }]);

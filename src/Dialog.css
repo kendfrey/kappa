@@ -1,0 +1,8 @@
+dialog {
+	margin-top: var(--ui-unit);
+	padding: var(--border-radius);
+	border: var(--border);
+	border-radius: var(--border-radius);
+	background-color: var(--bg);
+	color: var(--fg);
+}
