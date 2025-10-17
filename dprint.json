@@ -2,21 +2,20 @@
 	"lineWidth": 120,
 	"indentWidth": 4,
 	"useTabs": true,
-	"newLineKind": "lf",
+	"newLineKind": "auto",
 	"typescript": {
 		"semiColons": "always",
 		"useBraces": "preferNone",
 		"bracePosition": "nextLine",
 		"singleBodyPosition": "nextLine",
 		"nextControlFlowPosition": "nextLine",
-		"preferSingleLine": true,
 		"arrowFunction.useParentheses": "preferNone"
 	},
 	"json": {},
 	"markdown": {
 		"emphasisKind": "asterisks"
 	},
-	"malva": { "declarationOrder": "smacss" },
+	"malva": { "declarationOrder": "smacss", "lineBreak": "crlf" },
 	"markup": {},
 	"excludes": [
 		"**/node_modules",

@@ -1,5 +1,5 @@
-import { XIcon } from "@phosphor-icons/react";
 import "./Dialog.css";
+import { XIcon } from "@phosphor-icons/react";
 
 export default function Dialog(
 	{ title, children, ref }: { title: string; children: React.ReactNode; ref: React.Ref<HTMLDialogElement>; },

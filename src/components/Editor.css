@@ -1,0 +1,30 @@
+.toolbar {
+	padding: var(--gap);
+	border-bottom: var(--border);
+	background-color: var(--highlight-1);
+}
+
+.editor {
+	width: fit-content;
+	margin: var(--gap);
+	border: var(--border);
+	border-radius: var(--border-radius);
+}
+
+select.colour-select {
+	width: var(--ui-unit);
+
+	&::picker-icon {
+		display: none;
+	}
+
+	&::picker(select) {
+		border: none;
+		background-color: transparent;
+	}
+
+	& option {
+		width: var(--ui-unit);
+		padding: 0;
+	}
+}
