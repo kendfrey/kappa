@@ -5,7 +5,7 @@ import {
 	PaintBrushHouseholdIcon,
 	PencilIcon,
 } from "@phosphor-icons/react";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { Context } from "../data/Context";
 import { addColumn, addRow, get, height, removeColumn, removeRow, set, width } from "../data/Diagram";
 import type { Options } from "../data/Options";
@@ -47,6 +47,19 @@ export default function DiagramEditor(
 			o.selectedColour = c;
 		});
 	}
+
+	const cursor = useMemo(() =>
+	{
+		switch (tool)
+		{
+			case "column":
+				return "col-resize";
+			case "row":
+				return "row-resize";
+			default:
+				return undefined;
+		}
+	}, [tool]);
 
 	const [drawToolState, setDrawToolState] = useState<
 		| {
@@ -255,6 +268,7 @@ export default function DiagramEditor(
 					diagram={diagram}
 					dragColumn={tool === "column" ? rowCol : undefined}
 					dragRow={tool === "row" ? rowCol : undefined}
+					cursor={cursor}
 					scale={64}
 					theme={options.theme}
 					onPointerDown={onPointerDown}

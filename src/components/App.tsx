@@ -1,12 +1,12 @@
 import "./App.css";
 import {
 	ArrowsLeftRightIcon,
+	CirclesThreeIcon,
 	GearIcon,
 	IconContext,
 	ListIcon,
 	QuestionIcon,
 	ScribbleIcon,
-	ShuffleIcon,
 } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { type Context, testContext } from "../data/Context";
@@ -70,7 +70,7 @@ export default function App()
 	}
 
 	return (
-		<IconContext.Provider value={{ size: 20 }}>
+		<IconContext.Provider value={{ size: 20, weight: "bold" }}>
 			<div className="flex" style={{ height: "100vh", gap: 0 }}>
 				<div
 					className="flex column"
@@ -114,7 +114,7 @@ export default function App()
 								<ArrowsLeftRightIcon /> Lemmas
 							</div>
 							<div className="flex section-header">
-								<ShuffleIcon /> Proofs
+								<CirclesThreeIcon weight="fill" /> Proofs
 							</div>
 							<div className="flex section-header">
 								<ScribbleIcon /> Diagrams
