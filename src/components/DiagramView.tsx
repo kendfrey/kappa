@@ -17,15 +17,19 @@ export interface DiagramPointerEvent
 export interface DiagramViewProps
 {
 	diagram: Diagram;
+	dragColumn?: number;
+	dragRow?: number;
 	scale: number;
 	theme: Theme;
 	onPointerDown?: (e: DiagramPointerEvent) => void;
 	onPointerUp?: (e: DiagramPointerEvent) => void;
 	onPointerMove?: (e: DiagramPointerEvent) => void;
+	onPointerLeave?: () => void;
 }
 
 export default function DiagramView(
-	{ diagram, scale, theme, onPointerDown, onPointerUp, onPointerMove }: DiagramViewProps,
+	{ diagram, dragColumn, dragRow, scale, theme, onPointerDown, onPointerUp, onPointerMove, onPointerLeave }:
+		DiagramViewProps,
 )
 {
 	const ref = useRef<HTMLCanvasElement>(null);
@@ -37,18 +41,20 @@ export default function DiagramView(
 
 		const ctx = ref.current.getContext("2d")!;
 
-		const w = ref.current.width = width(diagram) * scale;
-		const h = ref.current.height = height(diagram) * scale;
+		const w = width(diagram);
+		const h = height(diagram);
+		const cw = ref.current.width = w * scale;
+		const ch = ref.current.height = h * scale;
 		const lw = scale * 0.125;
 
 		ctx.fillStyle = "transparent";
-		ctx.fillRect(0, 0, w, h);
+		ctx.fillRect(0, 0, cw, ch);
 
 		ctx.lineWidth = lw;
 
-		for (let y = 0; y < height(diagram); y++)
+		for (let y = 0; y < h; y++)
 		{
-			for (let x = 0; x < width(diagram); x++)
+			for (let x = 0; x < w; x++)
 			{
 				const tile = get(diagram, { x, y })!;
 				switch (tile.type)
@@ -136,7 +142,68 @@ export default function DiagramView(
 				}
 			}
 		}
-	}, [diagram, scale, theme]);
+
+		if (dragColumn !== undefined)
+		{
+			ctx.strokeStyle = theme.colours[0];
+			ctx.fillStyle = theme.colours[0];
+			ctx.lineWidth = 2;
+			ctx.beginPath();
+			const cx = Math.max(3, Math.min(cw - 3, dragColumn * scale));
+			ctx.moveTo(cx, 0);
+			ctx.lineTo(cx, ch);
+			ctx.stroke();
+
+			for (let y = 0; y < h * 2; y++)
+			{
+				const cy = (y + 0.5) * scale * 0.5;
+
+				ctx.beginPath();
+				ctx.moveTo(cx - 7, cy);
+				ctx.lineTo(cx - 3, cy - 4);
+				ctx.lineTo(cx - 3, cy + 4);
+				ctx.closePath();
+				ctx.fill();
+
+				ctx.beginPath();
+				ctx.moveTo(cx + 7, cy);
+				ctx.lineTo(cx + 3, cy - 4);
+				ctx.lineTo(cx + 3, cy + 4);
+				ctx.closePath();
+				ctx.fill();
+			}
+		}
+
+		if (dragRow !== undefined)
+		{
+			ctx.strokeStyle = theme.colours[0];
+			ctx.fillStyle = theme.colours[0];
+			ctx.lineWidth = 2;
+			ctx.beginPath();
+			const cy = Math.max(3, Math.min(ch - 3, dragRow * scale));
+			ctx.moveTo(0, cy);
+			ctx.lineTo(cw, cy);
+			ctx.stroke();
+
+			for (let x = 0; x < w * 2; x++)
+			{
+				const cx = (x + 0.5) * scale * 0.5;
+				ctx.beginPath();
+				ctx.moveTo(cx, cy - 7);
+				ctx.lineTo(cx - 4, cy - 3);
+				ctx.lineTo(cx + 4, cy - 3);
+				ctx.closePath();
+				ctx.fill();
+
+				ctx.beginPath();
+				ctx.moveTo(cx, cy + 7);
+				ctx.lineTo(cx - 4, cy + 3);
+				ctx.lineTo(cx + 4, cy + 3);
+				ctx.closePath();
+				ctx.fill();
+			}
+		}
+	}, [diagram, dragColumn, dragRow, scale, theme]);
 
 	const [suppressContextMenu, setSuppressContextMenu] = useState(true);
 
@@ -208,6 +275,10 @@ export default function DiagramView(
 			{
 				setSuppressContextMenu(true);
 				onPointerMove?.(getEvent(e));
+			}}
+			onPointerLeave={() =>
+			{
+				onPointerLeave?.();
 			}}
 			onContextMenu={e =>
 			{

@@ -1,3 +1,5 @@
+import type { Point } from "./Point";
+
 export const symmetries = ["0", "1", "2", "3", "|", "/", "-", "\\"] as const;
 
 export type Symmetry = typeof symmetries[number];
@@ -41,4 +43,21 @@ export function elimSymm<T>(rot: (x: T) => T, flip: (x: T) => T, x: T, symm: Sym
 		case "\\":
 			return rot(rot(rot(flip(x))));
 	}
+}
+
+export interface Transform
+{
+	origin: Point;
+	symm: Symmetry;
+}
+
+export function Transform(x: number, y: number, symm: Symmetry): Transform
+{
+	return { origin: { x, y }, symm };
+}
+
+export function transformPoint(point: Point, trans: Transform): Point
+{
+	const { x, y } = elimSymm(({ x, y }) => ({ x: -y, y: x }), ({ x, y }) => ({ x: -x, y }), point, trans.symm);
+	return { x: x + trans.origin.x, y: y + trans.origin.y };
 }

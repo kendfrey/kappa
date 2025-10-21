@@ -7,6 +7,7 @@
 .editor {
 	width: fit-content;
 	margin: var(--gap);
+	overflow: hidden;
 	border: var(--border);
 	border-radius: var(--border-radius);
 }

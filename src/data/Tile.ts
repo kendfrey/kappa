@@ -8,7 +8,7 @@ export interface Tile
 	readonly colours: readonly number[];
 }
 
-export function tile(type: TileType, colours: readonly number[]): Tile
+export function Tile(type: TileType, ...colours: readonly number[]): Tile
 {
 	return { type, colours };
 }
@@ -24,21 +24,21 @@ export function transformTile(tile: Tile, symm: Symmetry): Tile
 			case " ":
 				return t;
 			case "|":
-				return { type: "-", colours: t.colours };
+				return Tile("-", ...t.colours);
 			case "-":
-				return { type: "|", colours: t.colours };
+				return Tile("|", ...t.colours);
 			case "b":
-				return { type: "p", colours: t.colours };
+				return Tile("p", ...t.colours);
 			case "d":
-				return { type: "b", colours: t.colours };
+				return Tile("b", ...t.colours);
 			case "p":
-				return { type: "q", colours: t.colours };
+				return Tile("q", ...t.colours);
 			case "q":
-				return { type: "d", colours: t.colours };
+				return Tile("d", ...t.colours);
 			case "%":
-				return { type: "$", colours: [t.colours[0], t.colours[2], t.colours[1]] };
+				return Tile("$", t.colours[0], t.colours[2], t.colours[1]);
 			case "$":
-				return { type: "%", colours: t.colours };
+				return Tile("%", ...t.colours);
 		}
 	}
 
@@ -52,15 +52,15 @@ export function transformTile(tile: Tile, symm: Symmetry): Tile
 			case "%":
 				return t;
 			case "b":
-				return { type: "d", colours: t.colours };
+				return Tile("d", ...t.colours);
 			case "d":
-				return { type: "b", colours: t.colours };
+				return Tile("b", ...t.colours);
 			case "p":
-				return { type: "q", colours: t.colours };
+				return Tile("q", ...t.colours);
 			case "q":
-				return { type: "p", colours: t.colours };
+				return Tile("p", ...t.colours);
 			case "$":
-				return { type: "$", colours: [t.colours[0], t.colours[2], t.colours[1]] };
+				return Tile("$", t.colours[0], t.colours[2], t.colours[1]);
 		}
 	}
 }

@@ -7,11 +7,11 @@ import {
 } from "@phosphor-icons/react";
 import { useCallback, useState } from "react";
 import type { Context } from "../data/Context";
-import { get, set } from "../data/Diagram";
+import { addColumn, addRow, get, height, removeColumn, removeRow, set, width } from "../data/Diagram";
 import type { Options } from "../data/Options";
-import { type Tile, transformSegment, transformTile } from "../data/Tile";
+import { Tile, transformSegment, transformTile } from "../data/Tile";
 import { invSymm, type Symmetry } from "../data/Transform";
-import { type Updater, useProjection } from "../immerHooks";
+import { type Updater, useProjection, useRefState } from "../hooks";
 import DiagramView, { type DiagramPointerEvent } from "./DiagramView";
 
 export default function DiagramEditor(
@@ -58,10 +58,38 @@ export default function DiagramEditor(
 		| undefined
 	>();
 
+	const [isDragging, setIsDragging] = useState(false);
+	const [rowCol, rowColRef, setRowCol] = useRefState<number | undefined>(undefined);
+
+	function onPointerDown()
+	{
+		setIsDragging(true);
+	}
+
+	function onPointerUp()
+	{
+		setIsDragging(false);
+	}
+
 	function onPointerMove(e: DiagramPointerEvent)
 	{
-		if (tool === "draw")
-			onDraw(e);
+		switch (tool)
+		{
+			case "draw":
+				onDraw(e);
+				break;
+			case "column":
+				onDragRowCol(e.columnBorder);
+				break;
+			case "row":
+				onDragRowCol(e.rowBorder);
+				break;
+		}
+	}
+
+	function onPointerLeave()
+	{
+		setRowCol(undefined);
 	}
 
 	function onDraw(e: DiagramPointerEvent)
@@ -72,7 +100,7 @@ export default function DiagramEditor(
 			{
 				updateDiagram(d =>
 				{
-					set(d, e, { type: " ", colours: [] });
+					set(d, e, Tile(" "));
 				});
 			}
 		}
@@ -119,10 +147,10 @@ export default function DiagramEditor(
 					case "n":
 						return;
 					case "e":
-						newTile = { type: "b", colours: [colour] };
+						newTile = Tile("b", colour);
 						break;
 					case "w":
-						newTile = { type: "d", colours: [colour] };
+						newTile = Tile("d", colour);
 						break;
 					case "s":
 						switch (drawToolState.originalTile.type)
@@ -133,28 +161,24 @@ export default function DiagramEditor(
 							case "d":
 							case "p":
 							case "q":
-								newTile = { type: "|", colours: [colour] };
+								newTile = Tile("|", colour);
 								break;
 							case "-":
 							case "%":
-								newTile = {
-									type: "$",
-									colours: [
-										colour,
-										drawToolState.originalTile.colours[0],
-										drawToolState.originalTile.colours[0],
-									],
-								};
+								newTile = Tile(
+									"$",
+									colour,
+									drawToolState.originalTile.colours[0],
+									drawToolState.originalTile.colours[0],
+								);
 								break;
 							case "$":
-								newTile = {
-									type: "$",
-									colours: [
-										colour,
-										drawToolState.originalTile.colours[1],
-										drawToolState.originalTile.colours[2],
-									],
-								};
+								newTile = Tile(
+									"$",
+									colour,
+									drawToolState.originalTile.colours[1],
+									drawToolState.originalTile.colours[2],
+								);
 								break;
 						}
 						break;
@@ -170,6 +194,35 @@ export default function DiagramEditor(
 		else
 		{
 			setDrawToolState(undefined);
+		}
+	}
+
+	function onDragRowCol(to: number)
+	{
+		if (!isDragging || rowColRef.current === undefined)
+			setRowCol(to);
+		else if (rowColRef.current !== to)
+		{
+			updateDiagram(diagram =>
+			{
+				if (rowColRef.current === undefined)
+					return;
+
+				const [size, remove, add] = tool === "column"
+					? [width, removeColumn, addColumn]
+					: [height, removeRow, addRow];
+
+				while (rowColRef.current > to && rowColRef.current > 0 && size(diagram) > 1)
+				{
+					setRowCol(rowColRef.current - 1);
+					remove(diagram, rowColRef.current);
+				}
+				while (rowColRef.current < to)
+				{
+					add(diagram, rowColRef.current);
+					setRowCol(rowColRef.current + 1);
+				}
+			});
 		}
 	}
 
@@ -198,7 +251,17 @@ export default function DiagramEditor(
 				</select>
 			</div>
 			<div className="editor">
-				<DiagramView diagram={diagram} scale={64} theme={options.theme} onPointerMove={onPointerMove} />
+				<DiagramView
+					diagram={diagram}
+					dragColumn={tool === "column" ? rowCol : undefined}
+					dragRow={tool === "row" ? rowCol : undefined}
+					scale={64}
+					theme={options.theme}
+					onPointerDown={onPointerDown}
+					onPointerUp={onPointerUp}
+					onPointerMove={onPointerMove}
+					onPointerLeave={onPointerLeave}
+				/>
 			</div>
 		</>
 	);

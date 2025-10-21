@@ -1,6 +1,6 @@
 import { useDebounceCallback } from "usehooks-ts";
 import { defaultDarkTheme, defaultLightTheme, type Options } from "../data/Options";
-import type { Updater } from "../immerHooks";
+import type { Updater } from "../hooks";
 import { ColourInput } from "./ColourInput";
 
 export default function OptionsDialog(

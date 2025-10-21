@@ -11,7 +11,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { type Context, testContext } from "../data/Context";
 import { defaultOptions } from "../data/Options";
-import { useImmerLocalStorage } from "../immerHooks";
+import { useImmerLocalStorage } from "../hooks";
 import DiagramEditor from "./DiagramEditor";
 import DiagramView from "./DiagramView";
 import Dialog from "./Dialog";
