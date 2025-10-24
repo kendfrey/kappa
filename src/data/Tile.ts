@@ -23,10 +23,10 @@ export function transformTile(tile: Tile, symm: Symmetry): Tile
 		{
 			case " ":
 				return t;
-			case "|":
-				return Tile("-", ...t.colours);
 			case "-":
 				return Tile("|", ...t.colours);
+			case "|":
+				return Tile("-", ...t.colours);
 			case "b":
 				return Tile("p", ...t.colours);
 			case "d":
@@ -47,8 +47,8 @@ export function transformTile(tile: Tile, symm: Symmetry): Tile
 		switch (t.type)
 		{
 			case " ":
-			case "|":
 			case "-":
+			case "|":
 			case "%":
 				return t;
 			case "b":

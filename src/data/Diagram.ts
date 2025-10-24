@@ -1,7 +1,7 @@
 import { unreachable } from "../util";
 import type { Point } from "./Point";
-import { Tile, transformTile } from "./Tile";
-import { invSymm, Transform, transformPoint } from "./Transform";
+import { type Segment, Tile, transformTile } from "./Tile";
+import { composeTrans, invSymm, type Symmetry, Transform, transformPoint } from "./Transform";
 
 export interface Diagram
 {
@@ -107,4 +107,111 @@ function getBorder(diagram: Diagram, trans: Transform): (number | undefined)[]
 		}
 	}
 	return result;
+}
+
+export function getArc(diagram: Diagram, { x, y }: Point, segment: Segment): [Point, number][]
+{
+	const tile = get(diagram, { x, y });
+	if (tile === undefined)
+		return [];
+
+	const arc = new Map<string, [Point, number]>();
+	let startDir: Symmetry;
+	switch (tile.type)
+	{
+		case " ":
+			return [];
+		case "-":
+		case "d":
+		case "q":
+			startDir = "0";
+			break;
+		case "|":
+			startDir = "1";
+			break;
+		case "b":
+		case "p":
+			startDir = "2";
+			break;
+		case "%":
+			switch (segment)
+			{
+				case "n":
+					startDir = "1";
+					break;
+				case "e":
+				case "w":
+				case "c":
+					startDir = "0";
+					break;
+				case "s":
+					startDir = "3";
+					break;
+			}
+			break;
+		case "$":
+			switch (segment)
+			{
+				case "n":
+				case "s":
+				case "c":
+					startDir = "1";
+					break;
+				case "e":
+					startDir = "2";
+					break;
+				case "w":
+					startDir = "0";
+					break;
+			}
+			break;
+	}
+	const startTrans = Transform(x, y, startDir);
+	followArc(diagram, startTrans, arc);
+	followArc(diagram, composeTrans(Transform(-1, 0, "2"), startTrans), arc);
+	return [...arc.values()];
+}
+
+function followArc(diagram: Diagram, trans: Transform, arc: Map<string, [Point, number]>)
+{
+	const tile = getTrans(diagram, { x: 0, y: 0 }, trans);
+	if (tile === undefined)
+		return;
+
+	let colourIndex: number;
+	let nextTrans: Transform | undefined;
+	switch (tile.type)
+	{
+		case " ":
+		case "|":
+		case "b":
+		case "p":
+			return;
+		case "-":
+		case "%":
+			colourIndex = 0;
+			nextTrans = composeTrans(Transform(1, 0, "0"), trans);
+			break;
+		case "d":
+			colourIndex = 0;
+			nextTrans = composeTrans(Transform(0, -1, "3"), trans);
+			break;
+		case "q":
+			colourIndex = 0;
+			nextTrans = composeTrans(Transform(0, 1, "1"), trans);
+			break;
+		case "$":
+			colourIndex = transformTile(Tile(tile.type, 0, 1, 0), trans.symm).colours.indexOf(1);
+			break;
+	}
+
+	const segment = [trans.origin, colourIndex] satisfies [Point, number];
+	const segmentId = `${trans.origin.x},${trans.origin.y},${colourIndex}`;
+	if (arc.has(segmentId))
+		return;
+
+	arc.set(segmentId, segment);
+
+	if (nextTrans !== undefined)
+		followArc(diagram, nextTrans, arc);
 }

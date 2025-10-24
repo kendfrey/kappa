@@ -7,7 +7,7 @@ import {
 } from "@phosphor-icons/react";
 import { useCallback, useMemo, useState } from "react";
 import type { Context } from "../data/Context";
-import { addColumn, addRow, get, height, removeColumn, removeRow, set, width } from "../data/Diagram";
+import { addColumn, addRow, get, getArc, height, removeColumn, removeRow, set, width } from "../data/Diagram";
 import type { Options } from "../data/Options";
 import { Tile, transformSegment, transformTile } from "../data/Tile";
 import { invSymm, type Symmetry } from "../data/Transform";
@@ -74,9 +74,26 @@ export default function DiagramEditor(
 	const [isDragging, setIsDragging] = useState(false);
 	const [rowCol, rowColRef, setRowCol] = useRefState<number | undefined>(undefined);
 
-	function onPointerDown()
+	function onPointerDown(e: DiagramPointerEvent)
 	{
 		setIsDragging(true);
+
+		if (tool === "paint")
+		{
+			const arc = getArc(diagram, e, e.segment);
+			updateDiagram(d =>
+			{
+				for (const [point, seg] of arc)
+				{
+					const originalTile = get(d, point);
+					if (originalTile === undefined)
+						continue;
+					const colours = [...originalTile.colours];
+					colours[seg] = colour;
+					set(d, point, Tile(originalTile.type, ...colours));
+				}
+			});
+		}
 	}
 
 	function onPointerUp()
