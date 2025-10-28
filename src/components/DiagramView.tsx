@@ -21,6 +21,7 @@ export interface DiagramViewProps
 	dragRow?: number;
 	cursor?: string;
 	scale: number;
+	maxWidth?: number;
 	theme: Theme;
 	onPointerDown?: (e: DiagramPointerEvent) => void;
 	onPointerUp?: (e: DiagramPointerEvent) => void;
@@ -29,8 +30,19 @@ export interface DiagramViewProps
 }
 
 export default function DiagramView(
-	{ diagram, dragColumn, dragRow, cursor, scale, theme, onPointerDown, onPointerUp, onPointerMove, onPointerLeave }:
-		DiagramViewProps,
+	{
+		diagram,
+		dragColumn,
+		dragRow,
+		cursor,
+		scale,
+		maxWidth,
+		theme,
+		onPointerDown,
+		onPointerUp,
+		onPointerMove,
+		onPointerLeave,
+	}: DiagramViewProps,
 )
 {
 	const ref = useRef<HTMLCanvasElement>(null);
@@ -260,7 +272,7 @@ export default function DiagramView(
 
 	return (
 		<canvas
-			style={{ display: "block", cursor: cursor ?? "unset" }}
+			style={{ display: "block", cursor: cursor ?? "unset", maxWidth: maxWidth ?? "unset" }}
 			ref={ref}
 			onPointerDown={e =>
 			{

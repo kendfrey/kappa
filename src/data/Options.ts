@@ -1,9 +1,8 @@
-export interface Theme
-{
+export type Theme = {
 	type: "light" | "dark" | "custom";
 	background: string;
 	colours: string[];
-}
+};
 
 export const defaultLightTheme: Theme = {
 	type: "light",
@@ -17,12 +16,11 @@ export const defaultDarkTheme: Theme = {
 	colours: ["#dfdfdf", "#e54051", "#347ffb", "#30a000", "#d7a446", "#d093df", "#15c5cc", "#7f7f7f"],
 };
 
-export interface Options
-{
+export type Options = {
 	theme: Theme;
 	selectedDiagramEditorTool: "draw" | "paint" | "column" | "row";
 	selectedColour: number;
-}
+};
 
 export const defaultOptions: Options = {
 	theme: defaultLightTheme,

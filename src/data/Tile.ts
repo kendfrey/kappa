@@ -2,11 +2,10 @@ import { elimSymm, type Symmetry } from "./Transform";
 
 export type TileType = " " | "-" | "|" | "b" | "d" | "p" | "q" | "%" | "$";
 
-export interface Tile
-{
+export type Tile = {
 	readonly type: TileType;
 	readonly colours: readonly number[];
-}
+};
 
 export function Tile(type: TileType, ...colours: readonly number[]): Tile
 {

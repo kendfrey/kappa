@@ -4,7 +4,18 @@ import { useLocalStorage } from "usehooks-ts";
 
 export type Updater<T> = (recipe: (draft: T) => void) => void;
 
-export function useImmerLocalStorage<T>(key: string, defaultValue: T): [T, Updater<T>, () => void]
+type SerializableValue =
+	| string
+	| number
+	| boolean
+	| null
+	| readonly SerializableValue[]
+	| { readonly [key: string]: SerializableValue; };
+
+export function useImmerLocalStorage<T extends SerializableValue>(
+	key: string,
+	defaultValue: T,
+): [T, Updater<T>, () => void]
 {
 	const [value, setValue, removeValue] = useLocalStorage(key, defaultValue);
 	const updateValue = useCallback((recipe: (draft: T) => void) =>

@@ -5,17 +5,20 @@ import {
 	GearIcon,
 	IconContext,
 	ListIcon,
+	PlusIcon,
 	QuestionIcon,
 	ScribbleIcon,
 } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { type Context, testContext } from "../data/Context";
+import { Diagram, getSignature, isContinuous } from "../data/Diagram";
 import { defaultOptions } from "../data/Options";
 import { useImmerLocalStorage } from "../hooks";
 import DiagramEditor from "./DiagramEditor";
 import DiagramView from "./DiagramView";
 import Dialog from "./Dialog";
 import OptionsDialog from "./OptionsDialog";
+import ProofTile from "./ProofTile";
 
 export default function App()
 {
@@ -23,19 +26,23 @@ export default function App()
 
 	const bg = options.theme.background;
 	const fg = options.theme.colours[0];
+	const go = options.theme.colours[3];
 
 	useEffect(() =>
 	{
 		document.documentElement.style.setProperty("--bg", bg);
 		document.documentElement.style.setProperty("--fg", fg);
+		document.documentElement.style.setProperty("--go", go);
 		const lightness = (c: string) =>
 			parseInt(c.slice(1, 3), 16) + parseInt(c.slice(3, 5), 16) + parseInt(c.slice(5, 7), 16);
 		document.documentElement.style.setProperty("color-scheme", lightness(bg) >= lightness(fg) ? "light" : "dark");
-	}, [bg, fg]);
+	}, [bg, fg, go]);
 
 	const [context, updateContext, removeContext] = useImmerLocalStorage<Context>("kappa-context", testContext);
 
 	const [selection, setSelection] = useState<ContextSelection>(undefined);
+
+	const [dragSignature, setDragSignature] = useState<string | undefined>(undefined);
 
 	// TODO: just for testing
 	useEffect(() =>
@@ -75,7 +82,7 @@ export default function App()
 				<div
 					className="flex column"
 					style={{
-						width: 300,
+						width: 330,
 						padding: "var(--gap)",
 						borderRight: "var(--border)",
 						backgroundColor: "var(--highlight-1)",
@@ -113,32 +120,110 @@ export default function App()
 							<div className="flex section-header">
 								<ArrowsLeftRightIcon /> Lemmas
 							</div>
-							<div className="flex section-header">
+							<div
+								className="flex section-header"
+								data-dropzone={dragSignature !== undefined}
+								onDragOver={e =>
+								{
+									if (e.dataTransfer.types.includes("application/kappa-diagram-index"))
+										e.preventDefault();
+								}}
+								onDrop={e =>
+								{
+									setDragSignature(undefined);
+									setSelection({ type: "proof", index: context.proofs.length });
+									const i = parseInt(e.dataTransfer.getData("application/kappa-diagram-index"));
+									updateContext(ctx =>
+									{
+										const diagram = ctx.diagrams.splice(i, 1)[0];
+										ctx.proofs.push({ lhs: [diagram, []], rhs: null });
+									});
+								}}
+							>
 								<CirclesThreeIcon weight="fill" /> Proofs
+							</div>
+							<div className="section-body">
+								{context.proofs.map((_, i) =>
+								{
+									const selected = selection?.type === "proof" && selection.index === i;
+									return (
+										<ProofTile
+											key={i}
+											context={context}
+											index={i}
+											selected={selected}
+											options={options}
+											dragSignature={dragSignature}
+											dropHandler={(e, recipe) =>
+											{
+												setDragSignature(undefined);
+												setSelection({ type: "proof", index: i });
+												const diagramIndex = parseInt(
+													e.dataTransfer.getData("application/kappa-diagram-index"),
+												);
+												updateContext(ctx =>
+												{
+													const diagram = ctx.diagrams.splice(diagramIndex, 1)[0];
+													recipe(ctx, diagram);
+												});
+											}}
+											onClick={() =>
+												setSelection(selected ? undefined : { type: "proof", index: i })}
+										/>
+									);
+								})}
 							</div>
 							<div className="flex section-header">
 								<ScribbleIcon /> Diagrams
 							</div>
-							<div style={{ margin: "var(--gap)" }}>
+							<div className="section-body">
 								{context.diagrams.map((d, i) =>
 								{
 									const selected = selection?.type === "diagram" && selection.index === i;
+									const continuous = isContinuous(d);
 									return (
 										<div
 											key={i}
 											className="hover"
 											data-selected={selected}
-											style={{
-												borderRadius: "var(--border-radius)",
-												padding: "var(--gap)",
-											}}
 											onClick={() =>
 												setSelection(selected ? undefined : { type: "diagram", index: i })}
+											draggable={continuous}
+											onDragStart={e =>
+											{
+												const img = (e.target as HTMLDivElement).firstElementChild as
+													| HTMLCanvasElement
+													| null;
+												if (img !== null)
+													e.dataTransfer.setDragImage(img, img.width, img.height);
+												e.dataTransfer.setData("application/kappa-diagram-index", i.toString());
+												e.dataTransfer.effectAllowed = "move";
+												setDragSignature(getSignature(d));
+											}}
+											onDragEnd={() =>
+											{
+												setDragSignature(undefined);
+											}}
 										>
-											<DiagramView diagram={d} scale={16} theme={options.theme} />
+											<DiagramView diagram={d} scale={16} maxWidth={256} theme={options.theme} />
 										</div>
 									);
 								})}
+								<button
+									className="text-button"
+									style={{ margin: "var(--gap) 0" }}
+									onClick={() =>
+									{
+										setSelection({ type: "diagram", index: context.diagrams.length });
+										updateContext(ctx =>
+										{
+											ctx.diagrams.push(Diagram(4, 4));
+										});
+									}}
+								>
+									<PlusIcon />
+									<span>New Diagram</span>
+								</button>
 							</div>
 						</div>
 					</div>

@@ -3,10 +3,9 @@ import type { Point } from "./Point";
 import { type Segment, Tile, transformTile } from "./Tile";
 import { composeTrans, invSymm, type Symmetry, Transform, transformPoint } from "./Transform";
 
-export interface Diagram
-{
+export type Diagram = {
 	readonly tiles: Tile[][];
-}
+};
 
 export function Diagram(width: number, height: number): Diagram
 {
@@ -77,6 +76,34 @@ export function addRow(diagram: Diagram, i: number)
 {
 	const border = getBorder(diagram, i > 0 ? Transform(0, i - 1, "3") : Transform(0, 0, "\\"));
 	diagram.tiles.splice(i, 0, border.map(c => c !== undefined ? Tile("|", c) : Tile(" ")));
+}
+
+export function getSignature(diagram: Diagram): string
+{
+	const left = getBorder(diagram, Transform(0, 0, "0")).map(c => c ?? "").join(",");
+	const right = getBorder(diagram, Transform(width(diagram) - 1, 0, "|")).map(c => c ?? "").join(",");
+	const top = getBorder(diagram, Transform(0, 0, "\\")).map(c => c ?? "").join(",");
+	const bottom = getBorder(diagram, Transform(0, height(diagram) - 1, "3")).map(c => c ?? "").join(",");
+	return `${left};${right};${top};${bottom}`;
+}
+
+export function isContinuous(diagram: Diagram): boolean
+{
+	for (let y = 0; y < height(diagram) - 1; y++)
+	{
+		const top = getBorder(diagram, Transform(0, y, "3")).join(",");
+		const bottom = getBorder(diagram, Transform(0, y + 1, "\\")).join(",");
+		if (top !== bottom)
+			return false;
+	}
+	for (let x = 0; x < width(diagram) - 1; x++)
+	{
+		const left = getBorder(diagram, Transform(x, 0, "|")).join(",");
+		const right = getBorder(diagram, Transform(x + 1, 0, "0")).join(",");
+		if (left !== right)
+			return false;
+	}
+	return true;
 }
 
 function getBorder(diagram: Diagram, trans: Transform): (number | undefined)[]

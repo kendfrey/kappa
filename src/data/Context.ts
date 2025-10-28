@@ -1,10 +1,11 @@
 import { Diagram, set } from "./Diagram";
+import type { Proof } from "./Proof";
 import { Tile } from "./Tile";
 
-export interface Context
-{
+export type Context = {
+	proofs: Proof[];
 	diagrams: Diagram[];
-}
+};
 
 // TODO: just for testing
 const d1 = Diagram(2, 2);
@@ -18,5 +19,6 @@ set(d2, { x: 1, y: 0 }, Tile("$", 2, 0, 7));
 set(d2, { x: 0, y: 1 }, Tile("$", 1, 6, 3));
 set(d2, { x: 1, y: 1 }, Tile("%", 3, 2, 5));
 export const testContext: Context = {
+	proofs: [],
 	diagrams: [d1, d2],
 };

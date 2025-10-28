@@ -9,6 +9,7 @@
 	background-color: var(--bg);
 	color: var(--fg);
 	font-family: system-ui, sans-serif;
+	user-select: none;
 }
 
 .flex {
@@ -37,7 +38,10 @@ button, select, option, .hover, #menu > * {
 
 [data-selected="true"] {
 	outline: 2px solid var(--highlight-3);
-	outline-offset: -2px;
+}
+
+[data-dropzone="true"] {
+	outline: 2px solid var(--go);
 }
 
 button {
@@ -56,6 +60,14 @@ button {
 	&[data-selected="true"] {
 		background-color: var(--highlight-2);
 	}
+}
+
+button.text-button {
+	width: auto;
+	padding-right: var(--border-radius);
+	padding-left: var(--gap);
+	gap: var(--gap);
+	font: inherit;
 }
 
 select {
@@ -126,9 +138,17 @@ label {
 	align-items: center;
 	height: var(--ui-unit);
 	margin: var(--gap);
-	padding-right: var(--gap);
 	padding-left: var(--gap);
 	border-radius: var(--border-radius);
 	background-color: var(--highlight-1);
 	font-weight: bold;
+}
+
+.section-body {
+	margin: var(--gap);
+
+	& > div {
+		padding: var(--gap);
+		border-radius: var(--border-radius);
+	}
 }
