@@ -1,5 +1,15 @@
 import { unreachable } from "../util";
-import { addColumn, addRow, type Diagram, get, height, removeColumn, removeRow, width } from "./Diagram";
+import { addColumn, addRow, type Diagram, get, getArc, height, paint, removeColumn, removeRow, width } from "./Diagram";
+import type { Segment } from "./Tile";
+
+type PaintStep = {
+	type: "paint";
+	x: number;
+	y: number;
+	segment: Segment;
+	from: number;
+	to: number;
+};
 
 type AddColumnStep = {
 	type: "add-column";
@@ -21,12 +31,17 @@ type RemoveRowStep = {
 	index: number;
 };
 
-export type ProofStep = AddColumnStep | RemoveColumnStep | AddRowStep | RemoveRowStep;
+export type ProofStep = PaintStep | AddColumnStep | RemoveColumnStep | AddRowStep | RemoveRowStep;
 
 export function isValid(diagram: Diagram, step: ProofStep): boolean
 {
 	switch (step.type)
 	{
+		case "paint":
+		{
+			const [arc, terminated] = getArc(diagram, step, step.segment);
+			return terminated && arc.every(([point, seg]) => get(diagram, point)?.colours[seg] === step.from);
+		}
 		case "add-column":
 			return step.index >= 0 && step.index <= width(diagram);
 		case "remove-column":
@@ -56,6 +71,9 @@ export function applyStep(diagram: Diagram, step: ProofStep)
 {
 	switch (step.type)
 	{
+		case "paint":
+			paint(diagram, step.x, step.y, step.segment, step.to);
+			break;
 		case "add-column":
 			addColumn(diagram, step.index);
 			break;

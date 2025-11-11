@@ -4,12 +4,13 @@ import {
 	ArrowsLeftRightIcon,
 	ArrowsOutLineHorizontalIcon,
 	ArrowsOutLineVerticalIcon,
+	PaintBrushHouseholdIcon,
 	TrashIcon,
 } from "@phosphor-icons/react";
 import { produce } from "immer";
 import { useEffect, useMemo, useState } from "react";
 import type { Context } from "../data/Context";
-import { Diagram } from "../data/Diagram";
+import { Diagram, get, getArc } from "../data/Diagram";
 import type { Options } from "../data/Options";
 import type { Proof } from "../data/Proof";
 import { applyStep, isValid, type ProofStep } from "../data/ProofStep";
@@ -125,12 +126,31 @@ export default function ProofEditor({ context, updateContext, options, updateOpt
 
 	const [isDragging, setIsDragging] = useState(false);
 
-	function onPointerDown()
+	function onPointerDown(e: DiagramPointerEvent)
 	{
 		if (!editable)
 			return;
 
 		setIsDragging(true);
+
+		if (tool === "paint")
+		{
+			if (diagram === undefined)
+				return;
+
+			const root = getArc(diagram, e, e.segment)[0][0];
+			if (root === undefined)
+				return;
+
+			const from = get(diagram, root[0])?.colours[root[1]];
+			if (from === undefined)
+				return;
+
+			updateCoordinatedState(s =>
+			{
+				doStep(s, { type: "paint", x: e.x, y: e.y, segment: e.segment, from, to: colour });
+			});
+		}
 	}
 
 	function onPointerUp()
@@ -212,6 +232,9 @@ export default function ProofEditor({ context, updateContext, options, updateOpt
 				{editable
 					? (
 						<>
+							<button onClick={() => setTool("paint")} data-selected={tool === "paint"}>
+								<PaintBrushHouseholdIcon />
+							</button>
 							<button onClick={() => setTool("column")} data-selected={tool === "column"}>
 								<ArrowsOutLineHorizontalIcon />
 							</button>

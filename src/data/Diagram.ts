@@ -136,18 +136,32 @@ function getBorder(diagram: Diagram, trans: Transform): (number | undefined)[]
 	return result;
 }
 
-export function getArc(diagram: Diagram, { x, y }: Point, segment: Segment): [Point, number][]
+export function paint(diagram: Diagram, x: number, y: number, segment: Segment, to: number)
+{
+	const [arc, _] = getArc(diagram, { x, y }, segment);
+	for (const [point, seg] of arc)
+	{
+		const originalTile = get(diagram, point);
+		if (originalTile === undefined)
+			continue;
+		const colours = [...originalTile.colours];
+		colours[seg] = to;
+		set(diagram, point, Tile(originalTile.type, ...colours));
+	}
+}
+
+export function getArc(diagram: Diagram, { x, y }: Point, segment: Segment): [[Point, number][], boolean]
 {
 	const tile = get(diagram, { x, y });
 	if (tile === undefined)
-		return [];
+		return [[], false];
 
 	const arc = new Map<string, [Point, number]>();
 	let startDir: Symmetry;
 	switch (tile.type)
 	{
 		case " ":
-			return [];
+			return [[], false];
 		case "-":
 		case "d":
 		case "q":
@@ -194,16 +208,17 @@ export function getArc(diagram: Diagram, { x, y }: Point, segment: Segment): [Po
 			break;
 	}
 	const startTrans = Transform(x, y, startDir);
-	followArc(diagram, startTrans, arc);
-	followArc(diagram, composeTrans(Transform(-1, 0, "2"), startTrans), arc);
-	return [...arc.values()];
+	let terminated = true;
+	terminated = followArc(diagram, startTrans, arc) && terminated;
+	terminated = followArc(diagram, composeTrans(Transform(-1, 0, "2"), startTrans), arc) && terminated;
+	return [[...arc.values()], terminated];
 }
 
-function followArc(diagram: Diagram, trans: Transform, arc: Map<string, [Point, number]>)
+function followArc(diagram: Diagram, trans: Transform, arc: Map<string, [Point, number]>): boolean
 {
 	const tile = getTrans(diagram, { x: 0, y: 0 }, trans);
 	if (tile === undefined)
-		return;
+		return false;
 
 	let colourIndex: number;
 	let nextTrans: Transform | undefined;
@@ -213,7 +228,7 @@ function followArc(diagram: Diagram, trans: Transform, arc: Map<string, [Point, 
 		case "|":
 		case "b":
 		case "p":
-			return;
+			return false;
 		case "-":
 		case "%":
 			colourIndex = 0;
@@ -235,10 +250,12 @@ function followArc(diagram: Diagram, trans: Transform, arc: Map<string, [Point, 
 	const segment = [trans.origin, colourIndex] satisfies [Point, number];
 	const segmentId = `${trans.origin.x},${trans.origin.y},${colourIndex}`;
 	if (arc.has(segmentId))
-		return;
+		return true;
 
 	arc.set(segmentId, segment);
 
-	if (nextTrans !== undefined)
-		followArc(diagram, nextTrans, arc);
+	if (nextTrans === undefined)
+		return true;
+
+	return followArc(diagram, nextTrans, arc);
 }
