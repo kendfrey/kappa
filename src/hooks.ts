@@ -4,6 +4,16 @@ import { useLocalStorage } from "usehooks-ts";
 
 export type Updater<T> = (recipe: (draft: T) => void) => void;
 
+export function useImmerState<T>(initialValue: T | (() => T)): [T, Updater<T>]
+{
+	const [value, setValue] = useState(initialValue);
+	const updateValue = useCallback((recipe: (draft: T) => void) =>
+	{
+		setValue(t => produce(t, recipe));
+	}, []);
+	return [value, updateValue];
+}
+
 type SerializableValue =
 	| string
 	| number

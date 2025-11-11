@@ -12,6 +12,7 @@ import type { Options } from "../data/Options";
 import { Tile, transformSegment, transformTile } from "../data/Tile";
 import { invSymm, type Symmetry } from "../data/Transform";
 import { type Updater, useProjection, useRefState } from "../hooks";
+import ColourSelect from "./ColourSelect";
 import DiagramView, { type DiagramPointerEvent } from "./DiagramView";
 
 export default function DiagramEditor(
@@ -271,14 +272,7 @@ export default function DiagramEditor(
 				<button onClick={() => setTool("row")} data-selected={tool === "row"}>
 					<ArrowsOutLineVerticalIcon />
 				</button>
-				<select
-					className="colour-select"
-					value={colour}
-					onChange={e => setColour(parseInt(e.target.value))}
-					style={{ backgroundColor: options.theme.colours[colour] }}
-				>
-					{options.theme.colours.map((c, i) => <option key={i} value={i} style={{ backgroundColor: c }} />)}
-				</select>
+				<ColourSelect colour={colour} setColour={setColour} theme={options.theme} />
 			</div>
 			<div className="editor">
 				<DiagramView

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { type Diagram, get, height, width } from "../data/Diagram";
 import type { Theme } from "../data/Options";
 import type { Segment } from "../data/Tile";
@@ -47,7 +47,7 @@ export default function DiagramView(
 {
 	const ref = useRef<HTMLCanvasElement>(null);
 
-	useEffect(() =>
+	useLayoutEffect(() =>
 	{
 		if (!ref.current)
 			return;
@@ -257,8 +257,8 @@ export default function DiagramView(
 			else
 				segment = "c";
 		}
-		const columnBorder = dx < 0.5 ? x : x + 1;
-		const rowBorder = dy < 0.5 ? y : y + 1;
+		const columnBorder = dx <= 0.5 ? x : x + 1;
+		const rowBorder = dy <= 0.5 ? y : y + 1;
 
 		return {
 			x,
@@ -272,7 +272,7 @@ export default function DiagramView(
 
 	return (
 		<canvas
-			style={{ display: "block", cursor: cursor ?? "unset", maxWidth: maxWidth ?? "unset" }}
+			style={{ display: "block", cursor: cursor ?? "revert-layer", maxWidth: maxWidth ?? "revert-layer" }}
 			ref={ref}
 			onPointerDown={e =>
 			{

@@ -5,27 +5,13 @@
 }
 
 .editor {
-	width: fit-content;
-	margin: var(--gap);
-	overflow: hidden;
-	border: var(--border);
-	border-radius: var(--border-radius);
-}
+	flex: 1 1;
+	padding: var(--gap);
+	overflow: auto;
+	scrollbar-color: var(--highlight-1) var(--bg);
 
-select.colour-select {
-	width: var(--ui-unit);
-
-	&::picker-icon {
-		display: none;
-	}
-
-	&::picker(select) {
-		border: none;
-		background-color: transparent;
-	}
-
-	& option {
-		width: var(--ui-unit);
-		padding: 0;
+	& > canvas {
+		border: var(--border);
+		border-radius: var(--border-radius);
 	}
 }

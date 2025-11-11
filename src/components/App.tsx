@@ -1,6 +1,6 @@
 import "./App.css";
 import {
-	ArrowsLeftRightIcon,
+	ArrowsHorizontalIcon,
 	CirclesThreeIcon,
 	GearIcon,
 	IconContext,
@@ -18,6 +18,7 @@ import DiagramEditor from "./DiagramEditor";
 import DiagramView from "./DiagramView";
 import Dialog from "./Dialog";
 import OptionsDialog from "./OptionsDialog";
+import ProofEditor from "./ProofEditor";
 import ProofTile from "./ProofTile";
 
 export default function App()
@@ -60,7 +61,16 @@ export default function App()
 			case "lemma":
 				return <>Lemma {selection.index}</>;
 			case "proof":
-				return <>Proof {selection.index}</>;
+				return (
+					<ProofEditor
+						key={selection.index}
+						context={context}
+						updateContext={updateContext}
+						options={options}
+						updateOptions={updateOptions}
+						index={selection.index}
+					/>
+				);
 			case "diagram":
 				return (
 					<DiagramEditor
@@ -118,7 +128,7 @@ export default function App()
 					>
 						<div className="scroll">
 							<div className="flex section-header">
-								<ArrowsLeftRightIcon /> Lemmas
+								<ArrowsHorizontalIcon /> Lemmas
 							</div>
 							<div
 								className="flex section-header"
@@ -228,7 +238,7 @@ export default function App()
 						</div>
 					</div>
 				</div>
-				<div style={{ flex: 1 }}>{getMainPanelContent()}</div>
+				<div className="flex column" style={{ flex: 1, gap: 0, width: 0 }}>{getMainPanelContent()}</div>
 			</div>
 		</IconContext.Provider>
 	);

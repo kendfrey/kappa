@@ -1,0 +1,17 @@
+select.colour-select {
+	width: var(--ui-unit);
+
+	&::picker-icon {
+		display: none;
+	}
+
+	&::picker(select) {
+		border: none;
+		background-color: transparent;
+	}
+
+	& option {
+		width: var(--ui-unit);
+		padding: 0;
+	}
+}

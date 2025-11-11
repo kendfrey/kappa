@@ -4,10 +4,10 @@ export type TileType = " " | "-" | "|" | "b" | "d" | "p" | "q" | "%" | "$";
 
 export type Tile = {
 	readonly type: TileType;
-	readonly colours: readonly number[];
+	readonly colours: number[];
 };
 
-export function Tile(type: TileType, ...colours: readonly number[]): Tile
+export function Tile(type: TileType, ...colours: number[]): Tile
 {
 	return { type, colours };
 }
