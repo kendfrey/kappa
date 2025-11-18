@@ -19,13 +19,13 @@ export const defaultDarkTheme: Theme = {
 export type Options = {
 	theme: Theme;
 	selectedDiagramEditorTool: "draw" | "paint" | "column" | "row";
-	selectedProofEditorTool: "paint" | "column" | "row";
+	selectedProofEditorTool: "drag" | "paint" | "column" | "row";
 	selectedColour: number;
 };
 
 export const defaultOptions: Options = {
 	theme: defaultLightTheme,
 	selectedDiagramEditorTool: "draw",
-	selectedProofEditorTool: "paint",
+	selectedProofEditorTool: "drag",
 	selectedColour: 0,
 };

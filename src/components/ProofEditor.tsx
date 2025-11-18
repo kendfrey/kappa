@@ -4,16 +4,19 @@ import {
 	ArrowsLeftRightIcon,
 	ArrowsOutLineHorizontalIcon,
 	ArrowsOutLineVerticalIcon,
+	HandIcon,
 	PaintBrushHouseholdIcon,
 	TrashIcon,
 } from "@phosphor-icons/react";
 import { produce } from "immer";
 import { useEffect, useMemo, useState } from "react";
 import type { Context } from "../data/Context";
-import { Diagram, get, getArc } from "../data/Diagram";
+import { Diagram, findDraggableSegment, get, getArc } from "../data/Diagram";
 import type { Options } from "../data/Options";
+import type { Point } from "../data/Point";
 import type { Proof } from "../data/Proof";
 import { applyStep, isValid, type ProofStep } from "../data/ProofStep";
+import { Transform } from "../data/Transform";
 import { type Updater, useImmerState } from "../hooks";
 import ColourSelect from "./ColourSelect";
 import DiagramView, { type DiagramPointerEvent } from "./DiagramView";
@@ -40,6 +43,8 @@ export default function ProofEditor({ context, updateContext, options, updateOpt
 				: { side: "lhs", index: 0 },
 			lhsDiagrams: buildDiagrams(proof.lhs),
 			rhsDiagrams: buildDiagrams(proof.rhs),
+			dragAnchor: undefined,
+			dragCursor: undefined,
 			rowCol: undefined,
 		});
 	});
@@ -115,6 +120,8 @@ export default function ProofEditor({ context, updateContext, options, updateOpt
 
 		switch (tool)
 		{
+			case "drag":
+				return coordinatedState.dragAnchor !== undefined ? "grabbing" : "grab";
 			case "column":
 				return "col-resize";
 			case "row":
@@ -122,7 +129,7 @@ export default function ProofEditor({ context, updateContext, options, updateOpt
 			default:
 				return undefined;
 		}
-	}, [editable, tool]);
+	}, [editable, coordinatedState, tool]);
 
 	const [isDragging, setIsDragging] = useState(false);
 
@@ -133,29 +140,45 @@ export default function ProofEditor({ context, updateContext, options, updateOpt
 
 		setIsDragging(true);
 
-		if (tool === "paint")
+		switch (tool)
 		{
-			if (diagram === undefined)
-				return;
-
-			const root = getArc(diagram, e, e.segment)[0][0];
-			if (root === undefined)
-				return;
-
-			const from = get(diagram, root[0])?.colours[root[1]];
-			if (from === undefined)
-				return;
-
-			updateCoordinatedState(s =>
+			case "drag":
+				updateCoordinatedState(s =>
+				{
+					s.dragAnchor = e;
+					s.dragCursor = e;
+				});
+				break;
+			case "paint":
 			{
-				doStep(s, { type: "paint", x: e.x, y: e.y, segment: e.segment, from, to: colour });
-			});
+				if (diagram === undefined)
+					return;
+
+				const root = getArc(diagram, e, e.segment)[0][0];
+				if (root === undefined)
+					return;
+
+				const from = get(diagram, root[0])?.colours[root[1]];
+				if (from === undefined)
+					return;
+
+				updateCoordinatedState(s =>
+				{
+					doStep(s, { type: "paint", x: e.x, y: e.y, segment: e.segment, from, to: colour });
+				});
+				break;
+			}
 		}
 	}
 
 	function onPointerUp()
 	{
 		setIsDragging(false);
+
+		updateCoordinatedState(s =>
+		{
+			s.dragAnchor = undefined;
+		});
 	}
 
 	function onPointerMove(e: DiagramPointerEvent)
@@ -165,6 +188,9 @@ export default function ProofEditor({ context, updateContext, options, updateOpt
 
 		switch (tool)
 		{
+			case "drag":
+				onDrag(e);
+				break;
 			case "column":
 				onDragRowCol(e.columnBorder);
 				break;
@@ -179,7 +205,97 @@ export default function ProofEditor({ context, updateContext, options, updateOpt
 		updateCoordinatedState(s =>
 		{
 			s.rowCol = undefined;
+			s.dragCursor = undefined;
 		});
+	}
+
+	function onDrag(to: Point)
+	{
+		updateCoordinatedState(s =>
+		{
+			if (s.dragAnchor === undefined || s.dragCursor === undefined)
+			{
+				s.dragCursor = to;
+				return;
+			}
+
+			while (s.dragCursor.x < to.x)
+			{
+				s.dragCursor.x++;
+				tryDrag(s);
+			}
+			while (s.dragCursor.x > to.x)
+			{
+				s.dragCursor.x--;
+				tryDrag(s);
+			}
+			while (s.dragCursor.y < to.y)
+			{
+				s.dragCursor.y++;
+				tryDrag(s);
+			}
+			while (s.dragCursor.y > to.y)
+			{
+				s.dragCursor.y--;
+				tryDrag(s);
+			}
+		});
+	}
+
+	function tryDrag(s: CoordinatedState)
+	{
+		const step = getDragStep(s);
+		if (step !== undefined && doStep(s, step[0]))
+			s.dragAnchor = step[1];
+	}
+
+	function getDragStep(s: CoordinatedState): [ProofStep, Point] | undefined
+	{
+		if (s.dragAnchor === undefined || s.dragCursor === undefined)
+			return;
+
+		const side = s.current.side;
+		if (s.proof[side] === null)
+			return;
+
+		const diagrams = side === "lhs" ? s.lhsDiagrams : s.rhsDiagrams;
+		const diagram = diagrams[s.proof[side][1].length];
+
+		const segment = getSegmentDragStep(diagram, s.dragAnchor, s.dragCursor);
+		if (segment !== undefined)
+			return [{ type: "drag-segment", ...segment[0] }, segment[1]];
+	}
+
+	function getSegmentDragStep(
+		diagram: Diagram,
+		from: Point,
+		to: Point,
+	): [{ trans: Transform; length: number; }, Point] | undefined
+	{
+		if (to.x === from.x + 1)
+		{
+			const segment = findDraggableSegment(diagram, Transform(from.x, from.y, "3"));
+			if (segment !== undefined)
+				return [segment, { x: from.x + 1, y: from.y }];
+		}
+		if (to.x === from.x - 1)
+		{
+			const segment = findDraggableSegment(diagram, Transform(from.x, from.y, "1"));
+			if (segment !== undefined)
+				return [segment, { x: from.x - 1, y: from.y }];
+		}
+		if (to.y === from.y + 1)
+		{
+			const segment = findDraggableSegment(diagram, Transform(from.x, from.y, "0"));
+			if (segment !== undefined)
+				return [segment, { x: from.x, y: from.y + 1 }];
+		}
+		if (to.y === from.y - 1)
+		{
+			const segment = findDraggableSegment(diagram, Transform(from.x, from.y, "2"));
+			if (segment !== undefined)
+				return [segment, { x: from.x, y: from.y - 1 }];
+		}
 	}
 
 	function onDragRowCol(to: number)
@@ -232,6 +348,9 @@ export default function ProofEditor({ context, updateContext, options, updateOpt
 				{editable
 					? (
 						<>
+							<button onClick={() => setTool("drag")} data-selected={tool === "drag"}>
+								<HandIcon />
+							</button>
 							<button onClick={() => setTool("paint")} data-selected={tool === "paint"}>
 								<PaintBrushHouseholdIcon />
 							</button>
@@ -268,6 +387,7 @@ export default function ProofEditor({ context, updateContext, options, updateOpt
 			<div className="editor">
 				<DiagramView
 					diagram={diagram ?? Diagram(1, 1)}
+					dragAnchor={coordinatedState.dragAnchor ?? coordinatedState.dragCursor}
 					dragColumn={tool === "column" ? coordinatedState.rowCol : undefined}
 					dragRow={tool === "row" ? coordinatedState.rowCol : undefined}
 					cursor={cursor}
@@ -364,6 +484,8 @@ type CoordinatedState = {
 	current: { side: "lhs" | "rhs"; index: number; };
 	lhsDiagrams: Diagram[];
 	rhsDiagrams: Diagram[];
+	dragAnchor: Point | undefined;
+	dragCursor: Point | undefined;
 	rowCol: number | undefined;
 };
 

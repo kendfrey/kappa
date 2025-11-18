@@ -1,6 +1,26 @@
 import { unreachable } from "../util";
-import { addColumn, addRow, type Diagram, get, getArc, height, paint, removeColumn, removeRow, width } from "./Diagram";
+import {
+	addColumn,
+	addRow,
+	type Diagram,
+	dragSegment,
+	get,
+	getArc,
+	height,
+	isDraggableSegmentValid,
+	paint,
+	removeColumn,
+	removeRow,
+	width,
+} from "./Diagram";
 import type { Segment } from "./Tile";
+import type { Transform } from "./Transform";
+
+type DragSegmentStep = {
+	type: "drag-segment";
+	trans: Transform;
+	length: number;
+};
 
 type PaintStep = {
 	type: "paint";
@@ -31,12 +51,14 @@ type RemoveRowStep = {
 	index: number;
 };
 
-export type ProofStep = PaintStep | AddColumnStep | RemoveColumnStep | AddRowStep | RemoveRowStep;
+export type ProofStep = DragSegmentStep | PaintStep | AddColumnStep | RemoveColumnStep | AddRowStep | RemoveRowStep;
 
 export function isValid(diagram: Diagram, step: ProofStep): boolean
 {
 	switch (step.type)
 	{
+		case "drag-segment":
+			return isDraggableSegmentValid(diagram, step.trans, step.length);
 		case "paint":
 		{
 			const [arc, terminated] = getArc(diagram, step, step.segment);
@@ -71,6 +93,9 @@ export function applyStep(diagram: Diagram, step: ProofStep)
 {
 	switch (step.type)
 	{
+		case "drag-segment":
+			dragSegment(diagram, step.trans, step.length);
+			break;
 		case "paint":
 			paint(diagram, step.x, step.y, step.segment, step.to);
 			break;

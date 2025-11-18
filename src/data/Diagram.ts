@@ -136,6 +136,263 @@ function getBorder(diagram: Diagram, trans: Transform): (number | undefined)[]
 	return result;
 }
 
+export function findDraggableSegment(
+	diagram: Diagram,
+	trans: Transform,
+): { trans: Transform; length: number; } | undefined
+{
+	let left = undefined;
+	loop:
+	for (let x = 0;; x--)
+	{
+		const topTile = getTrans(diagram, { x, y: 0 }, trans);
+		const bottomTile = getTrans(diagram, { x, y: 1 }, trans);
+		if (topTile === undefined || bottomTile === undefined)
+			break;
+
+		switch (topTile.type)
+		{
+			case "-":
+				if (bottomTile.type !== " ")
+					break loop;
+				left = x;
+				continue;
+			case "b":
+				if (bottomTile.type !== " ")
+					break loop;
+				left = x;
+				break loop;
+			case "d":
+				if (bottomTile.type !== " ")
+					break loop;
+				continue;
+			case "p":
+				if (bottomTile.type !== "|" && bottomTile.type !== "d")
+					break loop;
+				left = x;
+				break loop;
+			case "q":
+				if (bottomTile.type !== "|" && bottomTile.type !== "b")
+					break loop;
+				continue;
+			case "%":
+			case "$":
+				if (bottomTile.type !== "|")
+					break loop;
+				continue;
+			case " ":
+			case "|":
+				break loop;
+			default:
+				unreachable(topTile.type);
+		}
+	}
+
+	let right = undefined;
+	loop:
+	for (let x = 0;; x++)
+	{
+		const topTile = getTrans(diagram, { x, y: 0 }, trans);
+		const bottomTile = getTrans(diagram, { x, y: 1 }, trans);
+		if (topTile === undefined || bottomTile === undefined)
+			break;
+
+		switch (topTile.type)
+		{
+			case "-":
+				if (bottomTile.type !== " ")
+					break loop;
+				right = x;
+				continue;
+			case "b":
+				if (bottomTile.type !== " ")
+					break loop;
+				continue;
+			case "d":
+				if (bottomTile.type !== " ")
+					break loop;
+				right = x;
+				break loop;
+			case "p":
+				if (bottomTile.type !== "|" && bottomTile.type !== "d")
+					break loop;
+				continue;
+			case "q":
+				if (bottomTile.type !== "|" && bottomTile.type !== "b")
+					break loop;
+				right = x;
+				break loop;
+			case "%":
+			case "$":
+				if (bottomTile.type !== "|")
+					break loop;
+				continue;
+			case " ":
+			case "|":
+				break loop;
+			default:
+				unreachable(topTile.type);
+		}
+	}
+
+	if (left === undefined || right === undefined || right <= left)
+		return undefined;
+
+	return {
+		trans: composeTrans(Transform(left, 0, "0"), trans),
+		length: right - left,
+	};
+}
+
+export function isDraggableSegmentValid(diagram: Diagram, trans: Transform, length: number): boolean
+{
+	const topLeftTile = getTrans(diagram, { x: 0, y: 0 }, trans);
+	const bottomLeftTile = getTrans(diagram, { x: 0, y: 1 }, trans);
+	if (topLeftTile === undefined || bottomLeftTile === undefined)
+		return false;
+
+	switch (topLeftTile.type)
+	{
+		case "-":
+		case "b":
+			if (bottomLeftTile.type !== " ")
+				return false;
+			break;
+		case "p":
+			if (bottomLeftTile.type !== "|" && bottomLeftTile.type !== "d")
+				return false;
+			break;
+		default:
+			return false;
+	}
+
+	for (let x = 1; x < length; x++)
+	{
+		const topTile = getTrans(diagram, { x, y: 0 }, trans);
+		const bottomTile = getTrans(diagram, { x, y: 1 }, trans);
+		if (topTile === undefined || bottomTile === undefined)
+			return false;
+
+		switch (topTile.type)
+		{
+			case "-":
+				if (bottomTile.type !== " ")
+					return false;
+				break;
+			case "%":
+			case "$":
+				if (bottomTile.type !== "|")
+					return false;
+				break;
+			default:
+				return false;
+		}
+	}
+
+	const topRightTile = getTrans(diagram, { x: length, y: 0 }, trans);
+	const bottomRightTile = getTrans(diagram, { x: length, y: 1 }, trans);
+	if (topRightTile === undefined || bottomRightTile === undefined)
+		return false;
+
+	switch (topRightTile.type)
+	{
+		case "-":
+		case "d":
+			if (bottomRightTile.type !== " ")
+				return false;
+			break;
+		case "q":
+			if (bottomRightTile.type !== "|" && bottomRightTile.type !== "b")
+				return false;
+			break;
+		default:
+			return false;
+	}
+
+	return true;
+}
+
+export function dragSegment(diagram: Diagram, trans: Transform, length: number)
+{
+	const topLeftTile = getTrans(diagram, { x: 0, y: 0 }, trans);
+	const bottomLeftTile = getTrans(diagram, { x: 0, y: 1 }, trans);
+	if (topLeftTile === undefined || bottomLeftTile === undefined)
+		throw new Error("invalid drag segment");
+
+	switch (topLeftTile.type)
+	{
+		case "-":
+			setTrans(diagram, { x: 0, y: 0 }, trans, Tile("q", ...topLeftTile.colours));
+			setTrans(diagram, { x: 0, y: 1 }, trans, Tile("b", ...topLeftTile.colours));
+			break;
+		case "b":
+			setTrans(diagram, { x: 0, y: 0 }, trans, Tile("|", ...topLeftTile.colours));
+			setTrans(diagram, { x: 0, y: 1 }, trans, topLeftTile);
+			break;
+		case "p":
+			setTrans(diagram, { x: 0, y: 0 }, trans, Tile(" "));
+			setTrans(
+				diagram,
+				{ x: 0, y: 1 },
+				trans,
+				Tile(bottomLeftTile.type === "|" ? "p" : "-", ...topLeftTile.colours),
+			);
+			break;
+		default:
+			throw new Error("invalid drag segment");
+	}
+
+	for (let x = 1; x < length; x++)
+	{
+		const topTile = getTrans(diagram, { x, y: 0 }, trans);
+		const bottomTile = getTrans(diagram, { x, y: 1 }, trans);
+		if (topTile === undefined || bottomTile === undefined)
+			throw new Error("invalid drag segment");
+
+		setTrans(diagram, { x, y: 1 }, trans, topTile);
+		switch (topTile.type)
+		{
+			case "-":
+			case "$":
+				setTrans(diagram, { x, y: 0 }, trans, bottomTile);
+				break;
+			case "%":
+				setTrans(diagram, { x, y: 0 }, trans, Tile("|", topTile.colours[1]));
+				break;
+			default:
+				throw new Error("invalid drag segment");
+		}
+	}
+
+	const topRightTile = getTrans(diagram, { x: length, y: 0 }, trans);
+	const bottomRightTile = getTrans(diagram, { x: length, y: 1 }, trans);
+	if (topRightTile === undefined || bottomRightTile === undefined)
+		throw new Error("invalid drag segment");
+
+	switch (topRightTile.type)
+	{
+		case "-":
+			setTrans(diagram, { x: length, y: 0 }, trans, Tile("p", ...topRightTile.colours));
+			setTrans(diagram, { x: length, y: 1 }, trans, Tile("d", ...topRightTile.colours));
+			break;
+		case "d":
+			setTrans(diagram, { x: length, y: 0 }, trans, Tile("|", ...topRightTile.colours));
+			setTrans(diagram, { x: length, y: 1 }, trans, topRightTile);
+			break;
+		case "q":
+			setTrans(diagram, { x: length, y: 0 }, trans, Tile(" "));
+			setTrans(
+				diagram,
+				{ x: length, y: 1 },
+				trans,
+				Tile(bottomRightTile.type === "|" ? "q" : "-", ...topRightTile.colours),
+			);
+			break;
+		default:
+			throw new Error("invalid drag segment");
+	}
+}
+
 export function paint(diagram: Diagram, x: number, y: number, segment: Segment, to: number)
 {
 	const [arc, _] = getArc(diagram, { x, y }, segment);

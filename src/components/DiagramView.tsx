@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { type Diagram, get, height, width } from "../data/Diagram";
 import type { Theme } from "../data/Options";
+import type { Point } from "../data/Point";
 import type { Segment } from "../data/Tile";
 import { unreachable } from "../util";
 
@@ -17,6 +18,7 @@ export interface DiagramPointerEvent
 export interface DiagramViewProps
 {
 	diagram: Diagram;
+	dragAnchor?: Point;
 	dragColumn?: number;
 	dragRow?: number;
 	cursor?: string;
@@ -32,6 +34,7 @@ export interface DiagramViewProps
 export default function DiagramView(
 	{
 		diagram,
+		dragAnchor,
 		dragColumn,
 		dragRow,
 		cursor,
@@ -156,6 +159,61 @@ export default function DiagramView(
 			}
 		}
 
+		if (dragAnchor !== undefined)
+		{
+			const tile = get(diagram, dragAnchor);
+			if (tile !== undefined && tile.type !== " ")
+			{
+				ctx.fillStyle = theme.colours[tile.colours[0]];
+				const r = scale * 0.1875;
+				let cx = (dragAnchor.x + 0.5) * scale;
+				let cy = (dragAnchor.y + 0.5) * scale;
+
+				const cr = Math.sqrt(0.125);
+				switch (tile.type)
+				{
+					case "b":
+						cx = (dragAnchor.x + 1 - cr) * scale;
+						cy = (dragAnchor.y + cr) * scale;
+						break;
+					case "d":
+						cx = (dragAnchor.x + cr) * scale;
+						cy = (dragAnchor.y + cr) * scale;
+						break;
+					case "p":
+						cx = (dragAnchor.x + 1 - cr) * scale;
+						cy = (dragAnchor.y + 1 - cr) * scale;
+						break;
+					case "q":
+						cx = (dragAnchor.x + cr) * scale;
+						cy = (dragAnchor.y + 1 - cr) * scale;
+						break;
+				}
+
+				ctx.globalCompositeOperation = "destination-out";
+				switch (tile.type)
+				{
+					case "%":
+						ctx.beginPath();
+						ctx.arc(cx, cy, r + lw * 0.5, Math.PI * 0.25, Math.PI * 0.75);
+						ctx.arc(cx, cy, r + lw * 0.5, Math.PI * 1.75, Math.PI * 1.25, true);
+						ctx.fill();
+						break;
+					case "$":
+						ctx.beginPath();
+						ctx.arc(cx, cy, r + lw * 0.5, Math.PI * -0.25, Math.PI * 0.25);
+						ctx.arc(cx, cy, r + lw * 0.5, Math.PI * 1.25, Math.PI * 0.75, true);
+						ctx.fill();
+						break;
+				}
+				ctx.globalCompositeOperation = "source-over";
+
+				ctx.beginPath();
+				ctx.ellipse(cx, cy, r, r, 0, 0, Math.PI * 2);
+				ctx.fill();
+			}
+		}
+
 		if (dragColumn !== undefined)
 		{
 			ctx.strokeStyle = theme.colours[0];
@@ -216,7 +274,7 @@ export default function DiagramView(
 				ctx.fill();
 			}
 		}
-	}, [diagram, dragColumn, dragRow, scale, theme]);
+	}, [diagram, dragAnchor, dragColumn, dragRow, scale, theme]);
 
 	const [suppressContextMenu, setSuppressContextMenu] = useState(true);
 
