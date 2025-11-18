@@ -96,11 +96,10 @@ function composeSymm(a: Symmetry, b: Symmetry): Symmetry
 	}
 }
 
-export interface Transform
-{
+export type Transform = {
 	origin: Point;
 	symm: Symmetry;
-}
+};
 
 export function Transform(x: number, y: number, symm: Symmetry): Transform
 {

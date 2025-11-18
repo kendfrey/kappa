@@ -74,6 +74,7 @@ export default function App()
 			case "diagram":
 				return (
 					<DiagramEditor
+						key={selection.index}
 						context={context}
 						updateContext={updateContext}
 						options={options}

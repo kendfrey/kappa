@@ -5,13 +5,13 @@ import {
 	PaintBrushHouseholdIcon,
 	PencilIcon,
 } from "@phosphor-icons/react";
-import { useCallback, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Context } from "../data/Context";
-import { addColumn, addRow, get, height, paint, removeColumn, removeRow, set, width } from "../data/Diagram";
+import { addColumn, addRow, Diagram, get, height, paint, removeColumn, removeRow, set, width } from "../data/Diagram";
 import type { Options } from "../data/Options";
 import { Tile, transformSegment, transformTile } from "../data/Tile";
 import { invSymm, type Symmetry } from "../data/Transform";
-import { type Updater, useProjection, useRefState } from "../hooks";
+import { type Updater, useImmerState } from "../hooks";
 import ColourSelect from "./ColourSelect";
 import DiagramView, { type DiagramPointerEvent } from "./DiagramView";
 
@@ -25,11 +25,20 @@ export default function DiagramEditor(
 	},
 )
 {
-	const [diagram, updateDiagram] = useProjection(
-		context,
-		updateContext,
-		useCallback(c => c.diagrams[index], [index]),
-	);
+	const [coordinatedState, updateCoordinatedState] = useImmerState<CoordinatedState>(() => ({
+		diagram: context.diagrams[index],
+		drawToolState: undefined,
+		rowCol: undefined,
+	}));
+
+	// Sync changes from this component's state back to the context.
+	useEffect(() =>
+	{
+		updateContext(c =>
+		{
+			c.diagrams[index] = coordinatedState.diagram;
+		});
+	}, [coordinatedState.diagram, index, updateContext]);
 
 	const tool = options.selectedDiagramEditorTool;
 	function setTool(t: Options["selectedDiagramEditorTool"])
@@ -62,18 +71,7 @@ export default function DiagramEditor(
 		}
 	}, [tool]);
 
-	const [drawToolState, setDrawToolState] = useState<
-		| {
-			x: number;
-			y: number;
-			putSourceNorth: Symmetry;
-			originalTile: Tile;
-		}
-		| undefined
-	>();
-
 	const [isDragging, setIsDragging] = useState(false);
-	const [rowCol, rowColRef, setRowCol] = useRefState<number | undefined>(undefined);
 
 	function onPointerDown(e: DiagramPointerEvent)
 	{
@@ -81,9 +79,9 @@ export default function DiagramEditor(
 
 		if (tool === "paint")
 		{
-			updateDiagram(d =>
+			updateCoordinatedState(s =>
 			{
-				paint(d, e.x, e.y, e.segment, colour);
+				paint(s.diagram, e.x, e.y, e.segment, colour);
 			});
 		}
 	}
@@ -91,6 +89,11 @@ export default function DiagramEditor(
 	function onPointerUp()
 	{
 		setIsDragging(false);
+
+		updateCoordinatedState(s =>
+		{
+			s.drawToolState = undefined;
+		});
 	}
 
 	function onPointerMove(e: DiagramPointerEvent)
@@ -111,141 +114,140 @@ export default function DiagramEditor(
 
 	function onPointerLeave()
 	{
-		setRowCol(undefined);
+		updateCoordinatedState(s =>
+		{
+			s.drawToolState = undefined;
+			s.rowCol = undefined;
+		});
 	}
 
 	function onDraw(e: DiagramPointerEvent)
 	{
-		if (e.raw.buttons & 2)
+		updateCoordinatedState(s =>
 		{
-			if (get(diagram, e) !== undefined)
+			if (e.raw.buttons & 2)
 			{
-				updateDiagram(d =>
-				{
-					set(d, e, Tile(" "));
-				});
+				if (get(s.diagram, e) !== undefined)
+					set(s.diagram, e, Tile(" "));
 			}
-		}
-		else if (e.raw.buttons & 1)
-		{
-			if ((drawToolState?.x !== e.x || drawToolState?.y !== e.y) && e.segment !== "c")
+			else if (e.raw.buttons & 1)
 			{
-				const originalTile = get(diagram, e);
-				if (originalTile === undefined)
+				if ((s.drawToolState?.x !== e.x || s.drawToolState?.y !== e.y) && e.segment !== "c")
 				{
-					setDrawToolState(undefined);
-					return;
-				}
-				let putSourceNorth: Symmetry;
-				switch (e.segment)
-				{
-					case "n":
-						putSourceNorth = "0";
-						break;
-					case "e":
-						putSourceNorth = "3";
-						break;
-					case "s":
-						putSourceNorth = "2";
-						break;
-					case "w":
-						putSourceNorth = "1";
-						break;
-				}
-				setDrawToolState({
-					x: e.x,
-					y: e.y,
-					putSourceNorth,
-					originalTile: transformTile(originalTile, putSourceNorth),
-				});
-			}
-			else if (drawToolState !== undefined)
-			{
-				let newTile: Tile;
-				const transformedSegment = transformSegment(e.segment, drawToolState.putSourceNorth);
-				switch (transformedSegment)
-				{
-					case "c":
-					case "n":
+					const originalTile = get(s.diagram, e);
+					if (originalTile === undefined)
+					{
+						s.drawToolState = undefined;
 						return;
-					case "e":
-						newTile = Tile("b", colour);
-						break;
-					case "w":
-						newTile = Tile("d", colour);
-						break;
-					case "s":
-						switch (drawToolState.originalTile.type)
-						{
-							case " ":
-							case "|":
-							case "b":
-							case "d":
-							case "p":
-							case "q":
-								newTile = Tile("|", colour);
-								break;
-							case "-":
-							case "%":
-								newTile = Tile(
-									"$",
-									colour,
-									drawToolState.originalTile.colours[0],
-									drawToolState.originalTile.colours[0],
-								);
-								break;
-							case "$":
-								newTile = Tile(
-									"$",
-									colour,
-									drawToolState.originalTile.colours[1],
-									drawToolState.originalTile.colours[2],
-								);
-								break;
-						}
-						break;
+					}
+					let putSourceNorth: Symmetry;
+					switch (e.segment)
+					{
+						case "n":
+							putSourceNorth = "0";
+							break;
+						case "e":
+							putSourceNorth = "3";
+							break;
+						case "s":
+							putSourceNorth = "2";
+							break;
+						case "w":
+							putSourceNorth = "1";
+							break;
+					}
+					s.drawToolState = {
+						x: e.x,
+						y: e.y,
+						putSourceNorth,
+						originalTile: transformTile(originalTile, putSourceNorth),
+					};
 				}
-
-				const transformedTile = transformTile(newTile, invSymm(drawToolState.putSourceNorth));
-				updateDiagram(d =>
+				else if (s.drawToolState !== undefined)
 				{
-					set(d, drawToolState, transformedTile);
-				});
+					let newTile: Tile;
+					const transformedSegment = transformSegment(e.segment, s.drawToolState.putSourceNorth);
+					switch (transformedSegment)
+					{
+						case "c":
+						case "n":
+							return;
+						case "e":
+							newTile = Tile("b", colour);
+							break;
+						case "w":
+							newTile = Tile("d", colour);
+							break;
+						case "s":
+							switch (s.drawToolState.originalTile.type)
+							{
+								case " ":
+								case "|":
+								case "b":
+								case "d":
+								case "p":
+								case "q":
+									newTile = Tile("|", colour);
+									break;
+								case "-":
+								case "%":
+									newTile = Tile(
+										"$",
+										colour,
+										s.drawToolState.originalTile.colours[0],
+										s.drawToolState.originalTile.colours[0],
+									);
+									break;
+								case "$":
+									newTile = Tile(
+										"$",
+										colour,
+										s.drawToolState.originalTile.colours[1],
+										s.drawToolState.originalTile.colours[2],
+									);
+									break;
+							}
+							break;
+					}
+
+					const transformedTile = transformTile(newTile, invSymm(s.drawToolState.putSourceNorth));
+					set(s.diagram, s.drawToolState, transformedTile);
+				}
 			}
-		}
-		else
-		{
-			setDrawToolState(undefined);
-		}
+			else
+			{
+				s.drawToolState = undefined;
+			}
+		});
 	}
 
 	function onDragRowCol(to: number)
 	{
-		if (!isDragging || rowColRef.current === undefined)
-			setRowCol(to);
-		else if (rowColRef.current !== to)
+		updateCoordinatedState(s =>
 		{
-			updateDiagram(diagram =>
+			if (!isDragging || s.rowCol === undefined)
+				s.rowCol = to;
+			else if (s.rowCol !== to)
 			{
-				if (rowColRef.current === undefined)
+				if (s.rowCol === undefined)
 					return;
 
 				const [size, remove, add] = tool === "column"
 					? [width, removeColumn, addColumn]
 					: [height, removeRow, addRow];
 
-				while (rowColRef.current > to && rowColRef.current > 0 && size(diagram) > 1)
+				while (s.rowCol > to && s.rowCol > 0 && size(s.diagram) > 1)
 				{
-					setRowCol(rowColRef.current - 1);
-					remove(diagram, rowColRef.current);
+					s.rowCol--;
+					remove(s.diagram, s.rowCol);
 				}
-				while (rowColRef.current < to)
+				while (s.rowCol < to)
 				{
-					add(diagram, rowColRef.current);
-					setRowCol(rowColRef.current + 1);
+					add(s.diagram, s.rowCol);
+					s.rowCol++;
 				}
-			});
-		}
+			}
+		});
 	}
 
 	return (
@@ -267,9 +269,9 @@ export default function DiagramEditor(
 			</div>
 			<div className="editor">
 				<DiagramView
-					diagram={diagram}
-					dragColumn={tool === "column" ? rowCol : undefined}
-					dragRow={tool === "row" ? rowCol : undefined}
+					diagram={coordinatedState.diagram}
+					dragColumn={tool === "column" ? coordinatedState.rowCol : undefined}
+					dragRow={tool === "row" ? coordinatedState.rowCol : undefined}
 					cursor={cursor}
 					scale={64}
 					theme={options.theme}
@@ -282,3 +284,14 @@ export default function DiagramEditor(
 		</>
 	);
 }
+
+type CoordinatedState = {
+	diagram: Diagram;
+	drawToolState: {
+		x: number;
+		y: number;
+		putSourceNorth: Symmetry;
+		originalTile: Tile;
+	} | undefined;
+	rowCol: number | undefined;
+};
