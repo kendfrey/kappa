@@ -38,7 +38,15 @@ export function set(diagram: Diagram, { x, y }: Point, tile: Tile)
 {
 	if (y < 0 || y >= height(diagram) || x < 0 || x >= width(diagram))
 		throw new Error("index out of bounds");
-	diagram.tiles[y][x] = tile;
+	if (
+		diagram.tiles[y][x].type !== tile.type
+		|| diagram.tiles[y][x].colours[0] !== tile.colours[0]
+		|| diagram.tiles[y][x].colours[1] !== tile.colours[1]
+		|| diagram.tiles[y][x].colours[2] !== tile.colours[2]
+	)
+	{
+		diagram.tiles[y][x] = tile;
+	}
 }
 
 export function getTrans(diagram: Diagram, point: Point, trans: Transform): Tile | undefined

@@ -9,7 +9,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Context } from "../data/Context";
 import { addColumn, addRow, Diagram, get, height, paint, removeColumn, removeRow, set, width } from "../data/Diagram";
 import type { Options } from "../data/Options";
-import { Tile, transformSegment, transformTile } from "../data/Tile";
+import { type Segment, Tile, transformSegment, transformTile } from "../data/Tile";
 import { invSymm, type Symmetry } from "../data/Transform";
 import { type Updater, useImmerState } from "../hooks";
 import ColourSelect from "./ColourSelect";
@@ -132,93 +132,130 @@ export default function DiagramEditor(
 			}
 			else if (e.raw.buttons & 1)
 			{
-				if ((s.drawToolState?.x !== e.x || s.drawToolState?.y !== e.y) && e.segment !== "c")
+				while (s.drawToolState !== undefined && (s.drawToolState.x !== e.x || s.drawToolState.y !== e.y))
 				{
-					const originalTile = get(s.diagram, e);
-					if (originalTile === undefined)
+					if (s.drawToolState.x < e.x)
 					{
-						s.drawToolState = undefined;
-						return;
+						doDraw(s, "e");
+						startDraw(s, s.drawToolState.x + 1, s.drawToolState.y, "w");
 					}
-					let putSourceNorth: Symmetry;
-					switch (e.segment)
+					else if (s.drawToolState.x > e.x)
 					{
-						case "n":
-							putSourceNorth = "0";
-							break;
-						case "e":
-							putSourceNorth = "3";
-							break;
-						case "s":
-							putSourceNorth = "2";
-							break;
-						case "w":
-							putSourceNorth = "1";
-							break;
+						doDraw(s, "w");
+						startDraw(s, s.drawToolState.x - 1, s.drawToolState.y, "e");
 					}
-					s.drawToolState = {
-						x: e.x,
-						y: e.y,
-						putSourceNorth,
-						originalTile: transformTile(originalTile, putSourceNorth),
-					};
+					else if (s.drawToolState.y < e.y)
+					{
+						doDraw(s, "s");
+						startDraw(s, s.drawToolState.x, s.drawToolState.y + 1, "n");
+					}
+					else if (s.drawToolState.y > e.y)
+					{
+						doDraw(s, "n");
+						startDraw(s, s.drawToolState.x, s.drawToolState.y - 1, "s");
+					}
 				}
-				else if (s.drawToolState !== undefined)
-				{
-					let newTile: Tile;
-					const transformedSegment = transformSegment(e.segment, s.drawToolState.putSourceNorth);
-					switch (transformedSegment)
-					{
-						case "c":
-						case "n":
-							return;
-						case "e":
-							newTile = Tile("b", colour);
-							break;
-						case "w":
-							newTile = Tile("d", colour);
-							break;
-						case "s":
-							switch (s.drawToolState.originalTile.type)
-							{
-								case " ":
-								case "|":
-								case "b":
-								case "d":
-								case "p":
-								case "q":
-									newTile = Tile("|", colour);
-									break;
-								case "-":
-								case "%":
-									newTile = Tile(
-										"$",
-										colour,
-										s.drawToolState.originalTile.colours[0],
-										s.drawToolState.originalTile.colours[0],
-									);
-									break;
-								case "$":
-									newTile = Tile(
-										"$",
-										colour,
-										s.drawToolState.originalTile.colours[1],
-										s.drawToolState.originalTile.colours[2],
-									);
-									break;
-							}
-							break;
-					}
 
-					const transformedTile = transformTile(newTile, invSymm(s.drawToolState.putSourceNorth));
-					set(s.diagram, s.drawToolState, transformedTile);
-				}
+				if (s.drawToolState === undefined)
+					startDraw(s, e.x, e.y, e.segment);
+				else
+					doDraw(s, e.segment);
 			}
 			else
 			{
 				s.drawToolState = undefined;
 			}
 		});
+	}
+
+	function startDraw(s: CoordinatedState, x: number, y: number, source: Segment)
+	{
+		const originalTile = get(s.diagram, { x, y });
+		if (originalTile === undefined)
+		{
+			s.drawToolState = undefined;
+			return;
+		}
+
+		let putSourceNorth: Symmetry;
+		switch (source)
+		{
+			case "n":
+				putSourceNorth = "0";
+				break;
+			case "e":
+				putSourceNorth = "3";
+				break;
+			case "s":
+				putSourceNorth = "2";
+				break;
+			case "w":
+				putSourceNorth = "1";
+				break;
+			case "c":
+				s.drawToolState = undefined;
+				return;
+		}
+		s.drawToolState = {
+			x,
+			y,
+			putSourceNorth,
+			originalTile: transformTile(originalTile, putSourceNorth),
+		};
+	}
+
+	function doDraw(s: CoordinatedState, dest: Segment)
+	{
+		if (s.drawToolState === undefined)
+			return;
+
+		let newTile: Tile;
+		const transformedSegment = transformSegment(dest, s.drawToolState.putSourceNorth);
+		switch (transformedSegment)
+		{
+			case "c":
+			case "n":
+				return;
+			case "e":
+				newTile = Tile("b", colour);
+				break;
+			case "w":
+				newTile = Tile("d", colour);
+				break;
+			case "s":
+				switch (s.drawToolState.originalTile.type)
+				{
+					case " ":
+					case "|":
+					case "b":
+					case "d":
+					case "p":
+					case "q":
+						newTile = Tile("|", colour);
+						break;
+					case "-":
+					case "%":
+						newTile = Tile(
+							"$",
+							colour,
+							s.drawToolState.originalTile.colours[0],
+							s.drawToolState.originalTile.colours[0],
+						);
+						break;
+					case "$":
+						newTile = Tile(
+							"$",
+							colour,
+							s.drawToolState.originalTile.colours[1],
+							s.drawToolState.originalTile.colours[2],
+						);
+						break;
+				}
+				break;
+		}
+
+		const transformedTile = transformTile(newTile, invSymm(s.drawToolState.putSourceNorth));
+		set(s.diagram, s.drawToolState, transformedTile);
 	}
 
 	function onDragRowCol(to: number)
