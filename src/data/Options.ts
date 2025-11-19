@@ -18,6 +18,7 @@ export const defaultDarkTheme: Theme = {
 
 export type Options = {
 	theme: Theme;
+	scale: number;
 	selectedDiagramEditorTool: "draw" | "paint" | "column" | "row";
 	selectedProofEditorTool: "drag" | "paint" | "column" | "row";
 	selectedColour: number;
@@ -25,6 +26,7 @@ export type Options = {
 
 export const defaultOptions: Options = {
 	theme: defaultLightTheme,
+	scale: 64,
 	selectedDiagramEditorTool: "draw",
 	selectedProofEditorTool: "drag",
 	selectedColour: 0,

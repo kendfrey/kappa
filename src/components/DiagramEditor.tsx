@@ -14,6 +14,7 @@ import type { Workspace } from "../data/Workspace";
 import { type Updater, useImmerState } from "../hooks";
 import ColourSelect from "./ColourSelect";
 import DiagramView, { type DiagramPointerEvent } from "./DiagramView";
+import ZoomControls from "./ZoomControls";
 
 export default function DiagramEditor(
 	{ workspace, updateWorkspace, options, updateOptions, index }: {
@@ -303,6 +304,7 @@ export default function DiagramEditor(
 					<ArrowsOutLineVerticalIcon />
 				</button>
 				<ColourSelect colour={colour} setColour={setColour} theme={options.theme} />
+				{ZoomControls(updateOptions)}
 			</div>
 			<div className="editor">
 				<DiagramView
@@ -310,7 +312,7 @@ export default function DiagramEditor(
 					dragColumn={tool === "column" ? coordinatedState.rowCol : undefined}
 					dragRow={tool === "row" ? coordinatedState.rowCol : undefined}
 					cursor={cursor}
-					scale={64}
+					scale={options.scale}
 					theme={options.theme}
 					onPointerDown={onPointerDown}
 					onPointerUp={onPointerUp}

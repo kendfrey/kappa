@@ -21,6 +21,7 @@ import { type Updater, useImmerState } from "../hooks";
 import ColourSelect from "./ColourSelect";
 import DiagramView, { type DiagramPointerEvent } from "./DiagramView";
 import Timeline from "./Timeline";
+import ZoomControls from "./ZoomControls";
 
 export default function ProofEditor({ workspace, updateWorkspace, options, updateOptions, index }: {
 	workspace: Workspace;
@@ -361,6 +362,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 								<ArrowsOutLineVerticalIcon />
 							</button>
 							<ColourSelect colour={colour} setColour={setColour} theme={options.theme} />
+							{ZoomControls(updateOptions)}
 						</>
 					)
 					: (
@@ -391,7 +393,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 					dragColumn={tool === "column" ? coordinatedState.rowCol : undefined}
 					dragRow={tool === "row" ? coordinatedState.rowCol : undefined}
 					cursor={cursor}
-					scale={64}
+					scale={options.scale}
 					theme={options.theme}
 					onPointerDown={onPointerDown}
 					onPointerUp={onPointerUp}
