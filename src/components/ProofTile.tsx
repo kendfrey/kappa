@@ -1,23 +1,23 @@
 import { ArrowsHorizontalIcon, QuestionMarkIcon } from "@phosphor-icons/react";
 import { useMemo } from "react";
-import type { Context } from "../data/Context";
 import { Diagram, getSignature, width } from "../data/Diagram";
 import type { Options } from "../data/Options";
+import type { Workspace } from "../data/Workspace";
 import DiagramView from "./DiagramView";
 
 export default function ProofTile(
-	{ context, index, selected, options, dragSignature, dropHandler, onClick }: {
-		context: Context;
+	{ workspace, index, selected, options, dragSignature, dropHandler, onClick }: {
+		workspace: Workspace;
 		index: number;
 		selected: boolean;
 		options: Options;
 		dragSignature: string | undefined;
-		dropHandler: (e: React.DragEvent<HTMLDivElement>, recipe: (draft: Context, diagram: Diagram) => void) => void;
+		dropHandler: (e: React.DragEvent<HTMLDivElement>, recipe: (draft: Workspace, diagram: Diagram) => void) => void;
 		onClick?: () => void;
 	},
 )
 {
-	const proof = context.proofs[index];
+	const proof = workspace.proofs[index];
 	const template = useMemo(() => proof.lhs?.[0] ?? proof.rhs?.[0] ?? Diagram(2, 2), [proof]);
 	const w = useMemo(() => width(template), [template]);
 	const signature = useMemo(() => getSignature(template), [template]);

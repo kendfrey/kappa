@@ -6,19 +6,19 @@ import {
 	PencilIcon,
 } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState } from "react";
-import type { Context } from "../data/Context";
 import { addColumn, addRow, Diagram, get, height, paint, removeColumn, removeRow, set, width } from "../data/Diagram";
 import type { Options } from "../data/Options";
 import { type Segment, Tile, transformSegment, transformTile } from "../data/Tile";
 import { invSymm, type Symmetry } from "../data/Transform";
+import type { Workspace } from "../data/Workspace";
 import { type Updater, useImmerState } from "../hooks";
 import ColourSelect from "./ColourSelect";
 import DiagramView, { type DiagramPointerEvent } from "./DiagramView";
 
 export default function DiagramEditor(
-	{ context, updateContext, options, updateOptions, index }: {
-		context: Context;
-		updateContext: Updater<Context>;
+	{ workspace, updateWorkspace, options, updateOptions, index }: {
+		workspace: Workspace;
+		updateWorkspace: Updater<Workspace>;
 		options: Options;
 		updateOptions: Updater<Options>;
 		index: number;
@@ -26,19 +26,19 @@ export default function DiagramEditor(
 )
 {
 	const [coordinatedState, updateCoordinatedState] = useImmerState<CoordinatedState>(() => ({
-		diagram: context.diagrams[index],
+		diagram: workspace.diagrams[index],
 		drawToolState: undefined,
 		rowCol: undefined,
 	}));
 
-	// Sync changes from this component's state back to the context.
+	// Sync changes from this component's state back to the workspace.
 	useEffect(() =>
 	{
-		updateContext(c =>
+		updateWorkspace(c =>
 		{
 			c.diagrams[index] = coordinatedState.diagram;
 		});
-	}, [coordinatedState.diagram, index, updateContext]);
+	}, [coordinatedState.diagram, index, updateWorkspace]);
 
 	const tool = options.selectedDiagramEditorTool;
 	function setTool(t: Options["selectedDiagramEditorTool"])

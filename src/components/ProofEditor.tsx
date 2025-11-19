@@ -10,21 +10,21 @@ import {
 } from "@phosphor-icons/react";
 import { produce } from "immer";
 import { useEffect, useMemo, useState } from "react";
-import type { Context } from "../data/Context";
 import { Diagram, findDraggableSegment, get, getArc } from "../data/Diagram";
 import type { Options } from "../data/Options";
 import type { Point } from "../data/Point";
 import type { Proof } from "../data/Proof";
 import { applyStep, isValid, type ProofStep } from "../data/ProofStep";
 import { Transform } from "../data/Transform";
+import type { Workspace } from "../data/Workspace";
 import { type Updater, useImmerState } from "../hooks";
 import ColourSelect from "./ColourSelect";
 import DiagramView, { type DiagramPointerEvent } from "./DiagramView";
 import Timeline from "./Timeline";
 
-export default function ProofEditor({ context, updateContext, options, updateOptions, index }: {
-	context: Context;
-	updateContext: Updater<Context>;
+export default function ProofEditor({ workspace, updateWorkspace, options, updateOptions, index }: {
+	workspace: Workspace;
+	updateWorkspace: Updater<Workspace>;
 	options: Options;
 	updateOptions: Updater<Options>;
 	index: number;
@@ -32,7 +32,7 @@ export default function ProofEditor({ context, updateContext, options, updateOpt
 {
 	const [coordinatedState, updateCoordinatedState] = useImmerState<CoordinatedState>(() =>
 	{
-		const proof = context.proofs[index];
+		const proof = workspace.proofs[index];
 
 		return ({
 			proof,
@@ -55,27 +55,27 @@ export default function ProofEditor({ context, updateContext, options, updateOpt
 		// For simplicity, this effect ignores any external changes except setting the LHS or RHS.
 		updateCoordinatedState(s =>
 		{
-			if (s.proof.lhs === null && context.proofs[index].lhs !== null)
+			if (s.proof.lhs === null && workspace.proofs[index].lhs !== null)
 			{
-				s.proof.lhs = context.proofs[index].lhs;
+				s.proof.lhs = workspace.proofs[index].lhs;
 				s.lhsDiagrams = buildDiagrams(s.proof.lhs);
 			}
-			if (s.proof.rhs === null && context.proofs[index].rhs !== null)
+			if (s.proof.rhs === null && workspace.proofs[index].rhs !== null)
 			{
-				s.proof.rhs = context.proofs[index].rhs;
+				s.proof.rhs = workspace.proofs[index].rhs;
 				s.rhsDiagrams = buildDiagrams(s.proof.rhs);
 			}
 		});
-	}, [context.proofs, index, updateCoordinatedState]);
+	}, [workspace.proofs, index, updateCoordinatedState]);
 
-	// Sync changes from this component's state back to the context.
+	// Sync changes from this component's state back to the workspace.
 	useEffect(() =>
 	{
-		updateContext(c =>
+		updateWorkspace(c =>
 		{
 			c.proofs[index] = coordinatedState.proof;
 		});
-	}, [coordinatedState.proof, index, updateContext]);
+	}, [coordinatedState.proof, index, updateWorkspace]);
 
 	const tool = options.selectedProofEditorTool;
 	function setTool(t: Options["selectedProofEditorTool"])

@@ -2,12 +2,12 @@ import { Diagram, set } from "./Diagram";
 import type { Proof } from "./Proof";
 import { Tile } from "./Tile";
 
-export type Context = {
+export type Workspace = {
 	proofs: Proof[];
 	diagrams: Diagram[];
 };
 
-export const emptyContext: Context = {
+export const emptyWorkspace: Workspace = {
 	proofs: [],
 	diagrams: [],
 };
@@ -23,9 +23,9 @@ set(d2, { x: 0, y: 0 }, Tile("%", 0, 4, 1));
 set(d2, { x: 1, y: 0 }, Tile("$", 2, 0, 7));
 set(d2, { x: 0, y: 1 }, Tile("$", 1, 6, 3));
 set(d2, { x: 1, y: 1 }, Tile("%", 3, 2, 5));
-export const testContext: Context = {
+export const testWorkspace: Workspace = {
 	proofs: [],
 	diagrams: [d1, d2],
 };
 
-export const defaultContext = testContext;
+export const defaultWorkspace = testWorkspace;

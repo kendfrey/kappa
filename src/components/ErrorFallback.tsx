@@ -13,7 +13,7 @@ export default function ErrorFallback({ error, resetErrorBoundary }: { error: Er
 				className="text-button"
 				onClick={() =>
 				{
-					localStorage.removeItem("kappa-context");
+					localStorage.removeItem("kappa-workspace");
 					resetErrorBoundary();
 				}}
 			>

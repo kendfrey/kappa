@@ -13,9 +13,9 @@ import {
 	ScribbleIcon,
 } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
-import { type Context, defaultContext, emptyContext, testContext } from "../data/Context";
 import { Diagram, getSignature, isContinuous } from "../data/Diagram";
 import { defaultOptions } from "../data/Options";
+import { defaultWorkspace, emptyWorkspace, testWorkspace, type Workspace } from "../data/Workspace";
 import { useImmerLocalStorage } from "../hooks";
 import DiagramEditor from "./DiagramEditor";
 import DiagramView from "./DiagramView";
@@ -42,18 +42,18 @@ export default function App()
 		document.documentElement.style.setProperty("color-scheme", lightness(bg) >= lightness(fg) ? "light" : "dark");
 	}, [bg, fg, go]);
 
-	const [context, updateContext] = useImmerLocalStorage<Context>("kappa-context", defaultContext);
+	const [workspace, updateWorkspace] = useImmerLocalStorage<Workspace>("kappa-workspace", defaultWorkspace);
 
-	const [selection, setSelection] = useState<ContextSelection>(undefined);
+	const [selection, setSelection] = useState<WorkspaceSelection>(undefined);
 
 	const [dragSignature, setDragSignature] = useState<string | undefined>(undefined);
 
-	function setContext(context: Context, force?: boolean)
+	function setWorkspace(workspace: Workspace, force?: boolean)
 	{
 		if (!force && !confirm("Are you sure? Unsaved changes will be lost."))
 			return;
 
-		updateContext(() => context);
+		updateWorkspace(() => workspace);
 		setSelection(undefined);
 	}
 
@@ -61,10 +61,10 @@ export default function App()
 	{
 		menuRef.current?.hidePopover();
 
-		const current = JSON.stringify(context);
+		const current = JSON.stringify(workspace);
 		const result = prompt("Copy this string or paste one to import:", current);
 		if (result?.trim() && result !== current)
-			setContext(JSON.parse(result) as Context, true);
+			setWorkspace(JSON.parse(result) as Workspace, true);
 	}
 
 	const menuRef = useRef<HTMLDivElement>(null);
@@ -96,8 +96,8 @@ export default function App()
 				return (
 					<ProofEditor
 						key={selection.index}
-						context={context}
-						updateContext={updateContext}
+						workspace={workspace}
+						updateWorkspace={updateWorkspace}
 						options={options}
 						updateOptions={updateOptions}
 						index={selection.index}
@@ -107,8 +107,8 @@ export default function App()
 				return (
 					<DiagramEditor
 						key={selection.index}
-						context={context}
-						updateContext={updateContext}
+						workspace={workspace}
+						updateWorkspace={updateWorkspace}
 						options={options}
 						updateOptions={updateOptions}
 						index={selection.index}
@@ -175,7 +175,7 @@ export default function App()
 									onClick={() =>
 									{
 										menuRef.current?.hidePopover();
-										setContext(emptyContext);
+										setWorkspace(emptyWorkspace);
 									}}
 								>
 									Empty
@@ -184,7 +184,7 @@ export default function App()
 									onClick={() =>
 									{
 										menuRef.current?.hidePopover();
-										setContext(testContext);
+										setWorkspace(testWorkspace);
 									}}
 								>
 									Test (default)
@@ -216,9 +216,9 @@ export default function App()
 								onDrop={e =>
 								{
 									setDragSignature(undefined);
-									setSelection({ type: "proof", index: context.proofs.length });
+									setSelection({ type: "proof", index: workspace.proofs.length });
 									const i = parseInt(e.dataTransfer.getData("application/kappa-diagram-index"));
-									updateContext(ctx =>
+									updateWorkspace(ctx =>
 									{
 										const diagram = ctx.diagrams.splice(i, 1)[0];
 										ctx.proofs.push({ lhs: [diagram, []], rhs: null });
@@ -228,13 +228,13 @@ export default function App()
 								<CirclesThreeIcon weight="fill" /> Proofs
 							</div>
 							<div className="section-body">
-								{context.proofs.map((_, i) =>
+								{workspace.proofs.map((_, i) =>
 								{
 									const selected = selection?.type === "proof" && selection.index === i;
 									return (
 										<ProofTile
 											key={i}
-											context={context}
+											workspace={workspace}
 											index={i}
 											selected={selected}
 											options={options}
@@ -246,7 +246,7 @@ export default function App()
 												const diagramIndex = parseInt(
 													e.dataTransfer.getData("application/kappa-diagram-index"),
 												);
-												updateContext(ctx =>
+												updateWorkspace(ctx =>
 												{
 													const diagram = ctx.diagrams.splice(diagramIndex, 1)[0];
 													recipe(ctx, diagram);
@@ -262,7 +262,7 @@ export default function App()
 								<ScribbleIcon /> Diagrams
 							</div>
 							<div className="section-body">
-								{context.diagrams.map((d, i) =>
+								{workspace.diagrams.map((d, i) =>
 								{
 									const selected = selection?.type === "diagram" && selection.index === i;
 									const continuous = isContinuous(d);
@@ -299,8 +299,8 @@ export default function App()
 									style={{ margin: "var(--gap) 0" }}
 									onClick={() =>
 									{
-										setSelection({ type: "diagram", index: context.diagrams.length });
-										updateContext(ctx =>
+										setSelection({ type: "diagram", index: workspace.diagrams.length });
+										updateWorkspace(ctx =>
 										{
 											ctx.diagrams.push(Diagram(4, 4));
 										});
@@ -319,7 +319,7 @@ export default function App()
 	);
 }
 
-type ContextSelection =
+type WorkspaceSelection =
 	| { type: "lemma"; index: number; }
 	| { type: "proof"; index: number; }
 	| { type: "diagram"; index: number; }
