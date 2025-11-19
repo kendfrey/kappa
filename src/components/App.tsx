@@ -1,7 +1,10 @@
 import "./App.css";
 import {
 	ArrowsHorizontalIcon,
+	CaretRightIcon,
 	CirclesThreeIcon,
+	FileArrowUpIcon,
+	FileDashedIcon,
 	GearIcon,
 	IconContext,
 	ListIcon,
@@ -10,7 +13,7 @@ import {
 	ScribbleIcon,
 } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
-import { type Context, testContext } from "../data/Context";
+import { type Context, defaultContext, emptyContext, testContext } from "../data/Context";
 import { Diagram, getSignature, isContinuous } from "../data/Diagram";
 import { defaultOptions } from "../data/Options";
 import { useImmerLocalStorage } from "../hooks";
@@ -39,20 +42,49 @@ export default function App()
 		document.documentElement.style.setProperty("color-scheme", lightness(bg) >= lightness(fg) ? "light" : "dark");
 	}, [bg, fg, go]);
 
-	const [context, updateContext, removeContext] = useImmerLocalStorage<Context>("kappa-context", testContext);
+	const [context, updateContext] = useImmerLocalStorage<Context>("kappa-context", defaultContext);
 
 	const [selection, setSelection] = useState<ContextSelection>(undefined);
 
 	const [dragSignature, setDragSignature] = useState<string | undefined>(undefined);
 
-	// TODO: just for testing
-	useEffect(() =>
+	function setContext(context: Context, force?: boolean)
 	{
-		removeContext();
-	}, [removeContext]);
+		if (!force && !confirm("Are you sure? Unsaved changes will be lost."))
+			return;
 
+		updateContext(() => context);
+		setSelection(undefined);
+	}
+
+	function exportImport()
+	{
+		menuRef.current?.hidePopover();
+
+		const current = JSON.stringify(context);
+		const result = prompt("Copy this string or paste one to import:", current);
+		if (result?.trim() && result !== current)
+			setContext(JSON.parse(result) as Context, true);
+	}
+
+	const menuRef = useRef<HTMLDivElement>(null);
 	const optionsDialogRef = useRef<HTMLDialogElement>(null);
 	const helpDialogRef = useRef<HTMLDialogElement>(null);
+	const resetWorkspaceRef = useRef<HTMLDivElement>(null);
+	const resetWorkspaceTimeoutRef = useRef<number>(0);
+
+	function showResetWorkspace()
+	{
+		if (resetWorkspaceTimeoutRef.current)
+			clearTimeout(resetWorkspaceTimeoutRef.current);
+
+		resetWorkspaceRef.current?.showPopover();
+	}
+
+	function hideResetWorkspace()
+	{
+		resetWorkspaceTimeoutRef.current = window.setTimeout(() => resetWorkspaceRef.current?.hidePopover(), 100);
+	}
 
 	function getMainPanelContent(): React.ReactNode
 	{
@@ -107,7 +139,7 @@ export default function App()
 						<button popoverTarget="menu">
 							<ListIcon />
 						</button>
-						<div id="menu" className="menu" popover="auto">
+						<div id="menu" ref={menuRef} className="menu" popover="auto">
 							<div onClick={() => optionsDialogRef.current?.showModal()}>
 								<GearIcon />
 								Options
@@ -115,6 +147,48 @@ export default function App()
 							<div onClick={() => helpDialogRef.current?.showModal()}>
 								<QuestionIcon />
 								Help
+							</div>
+							<div onClick={exportImport}>
+								<FileArrowUpIcon />
+								Export/Import...
+							</div>
+							<div
+								onMouseEnter={showResetWorkspace}
+								onMouseLeave={hideResetWorkspace}
+								// @ts-expect-error - anchor-name isn't in the type declaration yet
+								style={{ anchorName: "--reset-workspace" }}
+							>
+								<FileDashedIcon />
+								Reset Workspace
+								<CaretRightIcon style={{ marginLeft: "auto" }} />
+							</div>
+							<div
+								ref={resetWorkspaceRef}
+								className="menu"
+								popover="auto"
+								// @ts-expect-error - position-anchor isn't in the type declaration yet
+								style={{ positionAnchor: "--reset-workspace" }}
+								onMouseEnter={showResetWorkspace}
+								onMouseLeave={hideResetWorkspace}
+							>
+								<div
+									onClick={() =>
+									{
+										menuRef.current?.hidePopover();
+										setContext(emptyContext);
+									}}
+								>
+									Empty
+								</div>
+								<div
+									onClick={() =>
+									{
+										menuRef.current?.hidePopover();
+										setContext(testContext);
+									}}
+								>
+									Test (default)
+								</div>
 							</div>
 						</div>
 					</div>

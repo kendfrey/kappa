@@ -7,6 +7,11 @@ export type Context = {
 	diagrams: Diagram[];
 };
 
+export const emptyContext: Context = {
+	proofs: [],
+	diagrams: [],
+};
+
 // TODO: just for testing
 const d1 = Diagram(2, 2);
 set(d1, { x: 0, y: 0 }, Tile("p", 0));
@@ -22,3 +27,5 @@ export const testContext: Context = {
 	proofs: [],
 	diagrams: [d1, d2],
 };
+
+export const defaultContext = testContext;

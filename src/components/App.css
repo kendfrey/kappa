@@ -1,4 +1,6 @@
 :root {
+	--bg: white;
+	--fg: black;
 	--highlight-1: color(from var(--fg) srgb r g b / 0.1);
 	--highlight-2: color(from var(--fg) srgb r g b / 0.25);
 	--highlight-3: color(from var(--fg) srgb r g b / 0.5);
@@ -26,7 +28,7 @@
 	background-color: var(--highlight-2);
 }
 
-button, select, option, .hover, #menu > * {
+button, select, option, .hover, .menu > *:not(.menu) {
 	&:hover {
 		background-color: var(--highlight-1);
 	}
@@ -108,16 +110,18 @@ label {
 }
 
 .menu {
+	position-area: span-bottom right;
 	width: 200px;
 	margin: 0;
-	position-area: span-bottom right;
+	margin-left: 1px;
+	padding: 1px;
 	border: var(--border);
 	border-radius: var(--border-radius);
 	background-color: var(--bg);
 	color: inherit;
 	cursor: default;
 
-	& > * {
+	& > *:not(.menu) {
 		display: flex;
 		align-items: center;
 		height: var(--ui-unit);
