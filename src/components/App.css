@@ -1,6 +1,7 @@
 :root {
 	--bg: white;
 	--fg: black;
+	--go: green;
 	--highlight-1: color(from var(--fg) srgb r g b / 0.1);
 	--highlight-2: color(from var(--fg) srgb r g b / 0.25);
 	--highlight-3: color(from var(--fg) srgb r g b / 0.5);
@@ -38,7 +39,10 @@ button, select, option, .hover, .menu > *:not(.menu) {
 	}
 }
 
-[data-selected="true"] {
+[data-selected="true"],
+button:focus-visible,
+input:not([type="checkbox"]):focus-visible,
+:has(> input[type="checkbox"]:focus-visible) {
 	outline: 2px solid var(--highlight-3);
 }
 
@@ -103,10 +107,23 @@ option {
 	}
 }
 
+input {
+	box-sizing: border-box;
+	height: var(--ui-unit);
+	padding-right: var(--gap);
+	padding-left: var(--gap);
+	border: var(--border);
+	border-radius: var(--border-radius);
+	background-color: transparent;
+	color: inherit;
+	font: inherit;
+}
+
 label {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	height: var(--ui-unit);
 }
 
 .menu {

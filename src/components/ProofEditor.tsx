@@ -4,13 +4,16 @@ import {
 	ArrowsLeftRightIcon,
 	ArrowsOutLineHorizontalIcon,
 	ArrowsOutLineVerticalIcon,
+	CirclesThreeIcon,
 	HandIcon,
+	LinkSimpleHorizontalIcon,
 	PaintBrushHouseholdIcon,
 	TrashIcon,
 } from "@phosphor-icons/react";
 import { produce } from "immer";
 import { useEffect, useMemo, useState } from "react";
-import { Diagram, findDraggableSegment, get, getArc } from "../data/Diagram";
+import { Diagram, findDraggableSegment, get, getArc, getSignature } from "../data/Diagram";
+import type { Lemma } from "../data/Lemma";
 import type { Options } from "../data/Options";
 import type { Point } from "../data/Point";
 import type { Proof } from "../data/Proof";
@@ -18,17 +21,19 @@ import { applyStep, isValid, type ProofStep } from "../data/ProofStep";
 import { Transform } from "../data/Transform";
 import type { Workspace } from "../data/Workspace";
 import { type Updater, useImmerState } from "../hooks";
+import type { WorkspaceSelection } from "./App";
 import ColourSelect from "./ColourSelect";
 import DiagramView, { type DiagramPointerEvent } from "./DiagramView";
 import Timeline from "./Timeline";
 import ZoomControls from "./ZoomControls";
 
-export default function ProofEditor({ workspace, updateWorkspace, options, updateOptions, index }: {
+export default function ProofEditor({ workspace, updateWorkspace, options, updateOptions, index, setSelection }: {
 	workspace: Workspace;
 	updateWorkspace: Updater<Workspace>;
 	options: Options;
 	updateOptions: Updater<Options>;
 	index: number;
+	setSelection: React.Dispatch<React.SetStateAction<WorkspaceSelection>>;
 })
 {
 	const [coordinatedState, updateCoordinatedState] = useImmerState<CoordinatedState>(() =>
@@ -72,9 +77,9 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 	// Sync changes from this component's state back to the workspace.
 	useEffect(() =>
 	{
-		updateWorkspace(c =>
+		updateWorkspace(w =>
 		{
-			c.proofs[index] = coordinatedState.proof;
+			w.proofs[index] = coordinatedState.proof;
 		});
 	}, [coordinatedState.proof, index, updateWorkspace]);
 
@@ -113,6 +118,22 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 	}
 
 	const canDeleteSide = coordinatedState.proof.lhs !== null && coordinatedState.proof.rhs !== null;
+
+	const canLemma = useMemo(
+		() =>
+			coordinatedState.proof.lhs === null && (coordinatedState.proof.rhs?.[1].length ?? 0) > 0
+				&& getSignature(coordinatedState.rhsDiagrams[0]) === getSignature(coordinatedState.rhsDiagrams.at(-1)!)
+			|| coordinatedState.proof.rhs === null && (coordinatedState.proof.lhs?.[1].length ?? 0) > 0
+				&& getSignature(coordinatedState.lhsDiagrams[0]) === getSignature(coordinatedState.lhsDiagrams.at(-1)!)
+			|| JSON.stringify(coordinatedState.lhsDiagrams.at(-1))
+				=== JSON.stringify(coordinatedState.rhsDiagrams.at(-1)),
+		[coordinatedState],
+	);
+
+	const canAxiom = useMemo(
+		() => coordinatedState.proof.lhs?.[1].length === 0 && coordinatedState.proof.rhs?.[1].length === 0,
+		[coordinatedState.proof],
+	);
 
 	const cursor = useMemo(() =>
 	{
@@ -343,6 +364,36 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 		return true;
 	}
 
+	function makeAxiom()
+	{
+		if (coordinatedState.proof.lhs === null || coordinatedState.proof.rhs === null)
+			return;
+
+		const id = crypto.randomUUID();
+		let name: string;
+		for (let i = 1;; i++)
+		{
+			name = `Axiom ${i}`;
+			if (!workspace.lemmas.some(l => l.name === name))
+				break;
+		}
+		const axiom: Lemma = {
+			id,
+			name,
+			lhs: coordinatedState.proof.lhs[0],
+			rhs: coordinatedState.proof.rhs[0],
+			steps: null,
+			axioms: { [id]: 1 },
+		};
+
+		setSelection({ type: "lemma", index: workspace.lemmas.length });
+		updateWorkspace(w =>
+		{
+			w.proofs.splice(index, 1);
+			w.lemmas.push(axiom);
+		});
+	}
+
 	return (
 		<>
 			<div className="flex toolbar">
@@ -401,6 +452,21 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 					onPointerLeave={onPointerLeave}
 				/>
 			</div>
+			{canLemma
+				? (
+					<button className="text-button" style={{ alignSelf: "center" }}>
+						<CirclesThreeIcon weight="fill" />
+						Make Lemma
+					</button>
+				)
+				: canAxiom
+				? (
+					<button className="text-button" style={{ alignSelf: "center" }} onClick={makeAxiom}>
+						<LinkSimpleHorizontalIcon />
+						Make Axiom
+					</button>
+				)
+				: null}
 			<div className="flex" style={{ alignItems: "center", padding: "var(--gap)" }}>
 				{canDeleteSide && (
 					<button

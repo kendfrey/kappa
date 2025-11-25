@@ -1,16 +1,16 @@
 import { ArrowsHorizontalIcon, QuestionMarkIcon } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { Diagram, getSignature, width } from "../data/Diagram";
-import type { Options } from "../data/Options";
+import type { Theme } from "../data/Options";
 import type { Workspace } from "../data/Workspace";
 import DiagramView from "./DiagramView";
 
 export default function ProofTile(
-	{ workspace, index, selected, options, dragSignature, dropHandler, onClick }: {
+	{ workspace, index, selected, theme, dragSignature, dropHandler, onClick }: {
 		workspace: Workspace;
 		index: number;
 		selected: boolean;
-		options: Options;
+		theme: Theme;
 		dragSignature: string | undefined;
 		dropHandler: (e: React.DragEvent<HTMLDivElement>, recipe: (draft: Workspace, diagram: Diagram) => void) => void;
 		onClick?: () => void;
@@ -29,7 +29,7 @@ export default function ProofTile(
 		>
 			<div className="flex" style={{ alignItems: "center" }}>
 				{proof.lhs !== null
-					? <DiagramView diagram={proof.lhs[0]} scale={16} maxWidth={128} theme={options.theme} />
+					? <DiagramView diagram={proof.lhs[0]} scale={16} maxWidth={128} theme={theme} />
 					: (
 						<UnsetDiagram
 							w={w}
@@ -46,7 +46,7 @@ export default function ProofTile(
 					)}
 				<ArrowsHorizontalIcon />
 				{proof.rhs !== null
-					? <DiagramView diagram={proof.rhs[0]} scale={16} maxWidth={128} theme={options.theme} />
+					? <DiagramView diagram={proof.rhs[0]} scale={16} maxWidth={128} theme={theme} />
 					: (
 						<UnsetDiagram
 							w={w}

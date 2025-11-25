@@ -8,7 +8,8 @@ export default function ErrorFallback({ error, resetErrorBoundary }: { error: Er
 			style={{ height: "100vh", alignItems: "center", justifyContent: "center" }}
 		>
 			<span style={{ color: "red" }}>{error.toString()}</span>
-			localStorage may be corrupted. You can try deleting your data:
+			Try refreshing the page. If that doesn't help, localStorage may be corrupted. You can try deleting your
+			data:
 			<button
 				className="text-button"
 				onClick={() =>

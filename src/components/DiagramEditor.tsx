@@ -35,9 +35,9 @@ export default function DiagramEditor(
 	// Sync changes from this component's state back to the workspace.
 	useEffect(() =>
 	{
-		updateWorkspace(c =>
+		updateWorkspace(w =>
 		{
-			c.diagrams[index] = coordinatedState.diagram;
+			w.diagrams[index] = coordinatedState.diagram;
 		});
 	}, [coordinatedState.diagram, index, updateWorkspace]);
 

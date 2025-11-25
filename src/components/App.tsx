@@ -20,6 +20,8 @@ import { useImmerLocalStorage } from "../hooks";
 import DiagramEditor from "./DiagramEditor";
 import DiagramView from "./DiagramView";
 import Dialog from "./Dialog";
+import LemmaEditor from "./LemmaEditor";
+import LemmaTile from "./LemmaTile";
 import OptionsDialog from "./OptionsDialog";
 import ProofEditor from "./ProofEditor";
 import ProofTile from "./ProofTile";
@@ -91,7 +93,16 @@ export default function App()
 		switch (selection?.type)
 		{
 			case "lemma":
-				return <>Lemma {selection.index}</>;
+				return (
+					<LemmaEditor
+						key={selection.index}
+						workspace={workspace}
+						updateWorkspace={updateWorkspace}
+						options={options}
+						updateOptions={updateOptions}
+						index={selection.index}
+					/>
+				);
 			case "proof":
 				return (
 					<ProofEditor
@@ -101,6 +112,7 @@ export default function App()
 						options={options}
 						updateOptions={updateOptions}
 						index={selection.index}
+						setSelection={setSelection}
 					/>
 				);
 			case "diagram":
@@ -205,6 +217,23 @@ export default function App()
 							<div className="flex section-header">
 								<ArrowsHorizontalIcon /> Lemmas
 							</div>
+							<div className="section-body">
+								{workspace.lemmas.map((_, i) =>
+								{
+									const selected = selection?.type === "lemma" && selection.index === i;
+									return (
+										<LemmaTile
+											key={i}
+											workspace={workspace}
+											index={i}
+											selected={selected}
+											theme={options.theme}
+											onClick={() =>
+												setSelection(selected ? undefined : { type: "lemma", index: i })}
+										/>
+									);
+								})}
+							</div>
 							<div
 								className="flex section-header"
 								data-dropzone={dragSignature !== undefined}
@@ -218,10 +247,10 @@ export default function App()
 									setDragSignature(undefined);
 									setSelection({ type: "proof", index: workspace.proofs.length });
 									const i = parseInt(e.dataTransfer.getData("application/kappa-diagram-index"));
-									updateWorkspace(ctx =>
+									updateWorkspace(w =>
 									{
-										const diagram = ctx.diagrams.splice(i, 1)[0];
-										ctx.proofs.push({ lhs: [diagram, []], rhs: null });
+										const diagram = w.diagrams.splice(i, 1)[0];
+										w.proofs.push({ lhs: [diagram, []], rhs: null });
 									});
 								}}
 							>
@@ -237,7 +266,7 @@ export default function App()
 											workspace={workspace}
 											index={i}
 											selected={selected}
-											options={options}
+											theme={options.theme}
 											dragSignature={dragSignature}
 											dropHandler={(e, recipe) =>
 											{
@@ -246,10 +275,10 @@ export default function App()
 												const diagramIndex = parseInt(
 													e.dataTransfer.getData("application/kappa-diagram-index"),
 												);
-												updateWorkspace(ctx =>
+												updateWorkspace(w =>
 												{
-													const diagram = ctx.diagrams.splice(diagramIndex, 1)[0];
-													recipe(ctx, diagram);
+													const diagram = w.diagrams.splice(diagramIndex, 1)[0];
+													recipe(w, diagram);
 												});
 											}}
 											onClick={() =>
@@ -300,14 +329,14 @@ export default function App()
 									onClick={() =>
 									{
 										setSelection({ type: "diagram", index: workspace.diagrams.length });
-										updateWorkspace(ctx =>
+										updateWorkspace(w =>
 										{
-											ctx.diagrams.push(Diagram(4, 4));
+											w.diagrams.push(Diagram(4, 4));
 										});
 									}}
 								>
 									<PlusIcon />
-									<span>New Diagram</span>
+									New Diagram
 								</button>
 							</div>
 						</div>
@@ -319,7 +348,7 @@ export default function App()
 	);
 }
 
-type WorkspaceSelection =
+export type WorkspaceSelection =
 	| { type: "lemma"; index: number; }
 	| { type: "proof"; index: number; }
 	| { type: "diagram"; index: number; }
