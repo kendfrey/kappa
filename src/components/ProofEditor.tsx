@@ -17,7 +17,7 @@ import type { Lemma } from "../data/Lemma";
 import type { Options } from "../data/Options";
 import type { Point } from "../data/Point";
 import type { Proof } from "../data/Proof";
-import { applyStep, isValid, type ProofStep } from "../data/ProofStep";
+import { applyStep, isValid, type ProofStep, reverseStep } from "../data/ProofStep";
 import { Transform } from "../data/Transform";
 import type { Workspace } from "../data/Workspace";
 import { type Updater, useImmerState } from "../hooks";
@@ -364,6 +364,59 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 		return true;
 	}
 
+	function makeLemma()
+	{
+		const id = crypto.randomUUID();
+		let name: string;
+		for (let i = 1;; i++)
+		{
+			name = `Lemma ${i}`;
+			if (!workspace.lemmas.some(l => l.name === name))
+				break;
+		}
+
+		let lhs, rhs, steps;
+		if (coordinatedState.proof.lhs === null)
+		{
+			if (coordinatedState.proof.rhs === null)
+				return;
+
+			lhs = coordinatedState.rhsDiagrams.at(-1)!;
+			rhs = coordinatedState.proof.rhs[0];
+			steps = coordinatedState.proof.rhs[1].map(reverseStep).reverse();
+		}
+		else if (coordinatedState.proof.rhs === null)
+		{
+			lhs = coordinatedState.proof.lhs[0];
+			rhs = coordinatedState.lhsDiagrams.at(-1)!;
+			steps = coordinatedState.proof.lhs[1];
+		}
+		else
+		{
+			lhs = coordinatedState.proof.lhs[0];
+			rhs = coordinatedState.proof.rhs[0];
+			steps = coordinatedState.proof.lhs[1].concat(
+				coordinatedState.proof.rhs[1].map(reverseStep).reverse(),
+			);
+		}
+
+		const lemma: Lemma = {
+			id,
+			name,
+			lhs,
+			rhs,
+			steps,
+			axioms: {}, // TODO
+		};
+
+		setSelection({ type: "lemma", index: workspace.lemmas.length });
+		updateWorkspace(w =>
+		{
+			w.proofs.splice(index, 1);
+			w.lemmas.push(lemma);
+		});
+	}
+
 	function makeAxiom()
 	{
 		if (coordinatedState.proof.lhs === null || coordinatedState.proof.rhs === null)
@@ -454,7 +507,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 			</div>
 			{canLemma
 				? (
-					<button className="text-button" style={{ alignSelf: "center" }}>
+					<button className="text-button" style={{ alignSelf: "center" }} onClick={makeLemma}>
 						<CirclesThreeIcon weight="fill" />
 						Make Lemma
 					</button>

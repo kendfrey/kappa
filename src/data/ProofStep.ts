@@ -14,7 +14,7 @@ import {
 	width,
 } from "./Diagram";
 import type { Segment } from "./Tile";
-import type { Transform } from "./Transform";
+import { composeTrans, Transform } from "./Transform";
 
 type DragSegmentStep = {
 	type: "drag-segment";
@@ -113,5 +113,24 @@ export function applyStep(diagram: Diagram, step: ProofStep)
 			break;
 		default:
 			unreachable(step);
+	}
+}
+
+export function reverseStep(step: ProofStep): ProofStep
+{
+	switch (step.type)
+	{
+		case "drag-segment":
+			return { ...step, trans: composeTrans(Transform(step.length, 1, "2"), step.trans) };
+		case "paint":
+			return { ...step, to: step.from, from: step.to };
+		case "add-column":
+			return { type: "remove-column", index: step.index };
+		case "remove-column":
+			return { type: "add-column", index: step.index };
+		case "add-row":
+			return { type: "remove-row", index: step.index };
+		case "remove-row":
+			return { type: "add-row", index: step.index };
 	}
 }
