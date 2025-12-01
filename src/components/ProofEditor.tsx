@@ -6,6 +6,7 @@ import {
 	ArrowsOutLineVerticalIcon,
 	CirclesThreeIcon,
 	HandIcon,
+	HandTapIcon,
 	LinkSimpleHorizontalIcon,
 	PaintBrushHouseholdIcon,
 	TrashIcon,
@@ -23,7 +24,7 @@ import type { Workspace } from "../data/Workspace";
 import { type Updater, useImmerState } from "../hooks";
 import type { WorkspaceSelection } from "./App";
 import ColourSelect from "./ColourSelect";
-import DiagramView, { type DiagramPointerEvent } from "./DiagramView";
+import DiagramView, { type DiagramMouseEvent } from "./DiagramView";
 import Timeline from "./Timeline";
 import ZoomControls from "./ZoomControls";
 
@@ -188,7 +189,32 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 
 	const [isDragging, setIsDragging] = useState(false);
 
-	function onPointerDown(e: DiagramPointerEvent)
+	function onClick(e: DiagramMouseEvent)
+	{
+		if (!editable)
+			return;
+
+		switch (tool)
+		{
+			case "poke":
+			{
+				if (diagram === undefined)
+					return;
+
+				const step = getLemmaDragStep(diagram, { x: e.x, y: e.y }, { x: e.x, y: e.y }, dragLemmas, true);
+				if (step !== undefined)
+				{
+					updateCoordinatedState(s =>
+					{
+						doStep(s, step[0]);
+					});
+				}
+				break;
+			}
+		}
+	}
+
+	function onPointerDown(e: DiagramMouseEvent)
 	{
 		if (!editable)
 			return;
@@ -236,7 +262,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 		});
 	}
 
-	function onPointerMove(e: DiagramPointerEvent)
+	function onPointerMove(e: DiagramMouseEvent)
 	{
 		if (!editable)
 			return;
@@ -264,7 +290,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 		});
 	}
 
-	function onDrag(e: DiagramPointerEvent)
+	function onDrag(e: DiagramMouseEvent)
 	{
 		updateCoordinatedState(s =>
 		{
@@ -297,14 +323,14 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 		});
 	}
 
-	function tryDrag(s: CoordinatedState, e: DiagramPointerEvent)
+	function tryDrag(s: CoordinatedState, e: DiagramMouseEvent)
 	{
 		const step = getDragStep(s, e);
 		if (step !== undefined && doStep(s, step[0]))
 			s.dragAnchor = step[1];
 	}
 
-	function getDragStep(s: CoordinatedState, e: DiagramPointerEvent): [ProofStep, Point] | undefined
+	function getDragStep(s: CoordinatedState, e: DiagramMouseEvent): [ProofStep, Point] | undefined
 	{
 		if (s.dragAnchor === undefined || s.dragCursor === undefined)
 			return;
@@ -368,10 +394,11 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 		from: Point,
 		to: Point,
 		rulesMap: Map<string, [Lemma, Transform, boolean][]>,
+		poke: boolean = false,
 	): [ProofStep, Point] | undefined
 	{
 		const delta = { x: to.x - from.x, y: to.y - from.y };
-		if (delta.x === 0 && delta.y === 0)
+		if (delta.x === 0 && delta.y === 0 && !poke)
 			return undefined;
 
 		const rules = rulesMap.get(`${delta.x},${delta.y}`);
@@ -580,6 +607,9 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 							<button onClick={() => setTool("drag")} data-selected={tool === "drag"}>
 								<HandIcon />
 							</button>
+							<button onClick={() => setTool("poke")} data-selected={tool === "poke"}>
+								<HandTapIcon />
+							</button>
 							<button onClick={() => setTool("paint")} data-selected={tool === "paint"}>
 								<PaintBrushHouseholdIcon />
 							</button>
@@ -623,6 +653,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 					cursor={cursor}
 					scale={options.scale}
 					theme={options.theme}
+					onClick={onClick}
 					onPointerDown={onPointerDown}
 					onPointerUp={onPointerUp}
 					onPointerMove={onPointerMove}

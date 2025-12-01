@@ -6,14 +6,14 @@ import type { Point } from "../data/Point";
 import type { Segment } from "../data/Tile";
 import { unreachable } from "../util";
 
-export interface DiagramPointerEvent
+export interface DiagramMouseEvent
 {
 	x: number;
 	y: number;
 	segment: Segment;
 	columnBorder: number;
 	rowBorder: number;
-	raw: React.PointerEvent<HTMLCanvasElement>;
+	raw: React.MouseEvent<HTMLCanvasElement>;
 }
 
 export interface DiagramViewProps
@@ -28,9 +28,10 @@ export interface DiagramViewProps
 	scale: number;
 	maxWidth?: number;
 	theme: Theme;
-	onPointerDown?: (e: DiagramPointerEvent) => void;
-	onPointerUp?: (e: DiagramPointerEvent) => void;
-	onPointerMove?: (e: DiagramPointerEvent) => void;
+	onClick?: (e: DiagramMouseEvent) => void;
+	onPointerDown?: (e: DiagramMouseEvent) => void;
+	onPointerUp?: (e: DiagramMouseEvent) => void;
+	onPointerMove?: (e: DiagramMouseEvent) => void;
 	onPointerLeave?: () => void;
 }
 
@@ -46,6 +47,7 @@ export default function DiagramView(
 		scale,
 		maxWidth,
 		theme,
+		onClick,
 		onPointerDown,
 		onPointerUp,
 		onPointerMove,
@@ -359,7 +361,7 @@ export default function DiagramView(
 
 	const [suppressContextMenu, setSuppressContextMenu] = useState(true);
 
-	function getEvent(e: React.PointerEvent<HTMLCanvasElement>): DiagramPointerEvent
+	function getEvent(e: React.MouseEvent<HTMLCanvasElement>): DiagramMouseEvent
 	{
 		const { left, top } = ref.current!.getBoundingClientRect();
 		const sx = (e.clientX - left) / scale;
@@ -413,6 +415,10 @@ export default function DiagramView(
 		<canvas
 			style={{ display: "block", cursor: cursor ?? "revert-layer", maxWidth: maxWidth ?? "revert-layer" }}
 			ref={ref}
+			onClick={e =>
+			{
+				onClick?.(getEvent(e));
+			}}
 			onPointerDown={e =>
 			{
 				e.currentTarget.setPointerCapture(e.pointerId);

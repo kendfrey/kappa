@@ -13,7 +13,7 @@ import { invSymm, type Symmetry } from "../data/Transform";
 import type { Workspace } from "../data/Workspace";
 import { type Updater, useImmerState } from "../hooks";
 import ColourSelect from "./ColourSelect";
-import DiagramView, { type DiagramPointerEvent } from "./DiagramView";
+import DiagramView, { type DiagramMouseEvent } from "./DiagramView";
 import ZoomControls from "./ZoomControls";
 
 export default function DiagramEditor(
@@ -74,7 +74,7 @@ export default function DiagramEditor(
 
 	const [isDragging, setIsDragging] = useState(false);
 
-	function onPointerDown(e: DiagramPointerEvent)
+	function onPointerDown(e: DiagramMouseEvent)
 	{
 		setIsDragging(true);
 
@@ -97,7 +97,7 @@ export default function DiagramEditor(
 		});
 	}
 
-	function onPointerMove(e: DiagramPointerEvent)
+	function onPointerMove(e: DiagramMouseEvent)
 	{
 		switch (tool)
 		{
@@ -122,7 +122,7 @@ export default function DiagramEditor(
 		});
 	}
 
-	function onDraw(e: DiagramPointerEvent)
+	function onDraw(e: DiagramMouseEvent)
 	{
 		updateCoordinatedState(s =>
 		{

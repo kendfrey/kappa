@@ -20,7 +20,7 @@ export type Options = {
 	theme: Theme;
 	scale: number;
 	selectedDiagramEditorTool: "draw" | "paint" | "column" | "row";
-	selectedProofEditorTool: "drag" | "paint" | "column" | "row";
+	selectedProofEditorTool: "drag" | "poke" | "paint" | "column" | "row";
 	selectedColour: number;
 };
 

@@ -8,7 +8,7 @@ import { applyStep } from "../data/ProofStep";
 import type { Workspace } from "../data/Workspace";
 import type { Updater } from "../hooks";
 import Checkbox from "./Checkbox";
-import DiagramView, { type DiagramPointerEvent } from "./DiagramView";
+import DiagramView, { type DiagramMouseEvent } from "./DiagramView";
 import Timeline from "./Timeline";
 import ZoomControls from "./ZoomControls";
 
@@ -57,7 +57,7 @@ export default function LemmaEditor({ workspace, updateWorkspace, options, updat
 		: undefined;
 	const [proposedDragRule, setProposedDragRule] = useState<DragRule>();
 
-	function onPointerDown(e: DiagramPointerEvent)
+	function onPointerDown(e: DiagramMouseEvent)
 	{
 		if (dragRules === undefined)
 			return;
@@ -65,7 +65,7 @@ export default function LemmaEditor({ workspace, updateWorkspace, options, updat
 		setProposedDragRule({ from: { x: e.x, y: e.y }, to: { x: e.x, y: e.y }, altMode: e.raw.shiftKey });
 	}
 
-	function onPointerUp(e: DiagramPointerEvent)
+	function onPointerUp(e: DiagramMouseEvent)
 	{
 		setProposedDragRule(undefined);
 
@@ -78,6 +78,10 @@ export default function LemmaEditor({ workspace, updateWorkspace, options, updat
 		}
 
 		const newRule = { ...proposedDragRule, to: { x: e.x, y: e.y }, altMode: e.raw.shiftKey };
+
+		if (newRule.from.x === newRule.to.x && newRule.from.y === newRule.to.y)
+			newRule.altMode = false;
+
 		updateWorkspace(w =>
 		{
 			const rules = current === 0 ? w.lemmas[index].forwardRules : w.lemmas[index].reverseRules;
@@ -92,7 +96,7 @@ export default function LemmaEditor({ workspace, updateWorkspace, options, updat
 		});
 	}
 
-	function onPointerMove(e: DiagramPointerEvent)
+	function onPointerMove(e: DiagramMouseEvent)
 	{
 		if (dragRules === undefined || proposedDragRule === undefined)
 			return;
