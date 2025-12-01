@@ -8,11 +8,14 @@ import {
 	getArc,
 	height,
 	isDraggableSegmentValid,
+	isSubdiagram,
 	paint,
 	removeColumn,
 	removeRow,
 	width,
+	writeSubdiagram,
 } from "./Diagram";
+import type { Lemma } from "./Lemma";
 import type { Segment } from "./Tile";
 import { composeTrans, Transform } from "./Transform";
 
@@ -20,6 +23,14 @@ type DragSegmentStep = {
 	type: "drag-segment";
 	trans: Transform;
 	length: number;
+};
+
+type LemmaStep = {
+	type: "lemma";
+	id: string;
+	reverse: boolean;
+	trans: Transform;
+	colourMap: number[];
 };
 
 type PaintStep = {
@@ -51,14 +62,35 @@ type RemoveRowStep = {
 	index: number;
 };
 
-export type ProofStep = DragSegmentStep | PaintStep | AddColumnStep | RemoveColumnStep | AddRowStep | RemoveRowStep;
+export type ProofStep =
+	| DragSegmentStep
+	| LemmaStep
+	| PaintStep
+	| AddColumnStep
+	| RemoveColumnStep
+	| AddRowStep
+	| RemoveRowStep;
 
-export function isValid(diagram: Diagram, step: ProofStep): boolean
+export function isValid(diagram: Diagram, step: ProofStep, context: Lemma[]): boolean
 {
 	switch (step.type)
 	{
 		case "drag-segment":
 			return isDraggableSegmentValid(diagram, step.trans, step.length);
+		case "lemma":
+		{
+			const lemma = context.find(l => l.id === step.id);
+			if (lemma === undefined)
+				return false;
+
+			return isSubdiagram(
+				step.reverse ? lemma.rhs : lemma.lhs,
+				step.reverse ? lemma.lhs : lemma.rhs,
+				diagram,
+				step.trans,
+				step.colourMap,
+			);
+		}
 		case "paint":
 		{
 			const [arc, terminated] = getArc(diagram, step, step.segment);
@@ -89,13 +121,28 @@ export function isValid(diagram: Diagram, step: ProofStep): boolean
 	}
 }
 
-export function applyStep(diagram: Diagram, step: ProofStep)
+export function applyStep(diagram: Diagram, step: ProofStep, context: Lemma[])
 {
 	switch (step.type)
 	{
 		case "drag-segment":
 			dragSegment(diagram, step.trans, step.length);
 			break;
+		case "lemma":
+		{
+			const lemma = context.find(l => l.id === step.id);
+			if (lemma === undefined)
+				throw new Error("nonexistent lemma");
+
+			writeSubdiagram(
+				step.reverse ? lemma.lhs : lemma.rhs,
+				step.reverse ? lemma.rhs : lemma.lhs,
+				diagram,
+				step.trans,
+				step.colourMap,
+			);
+			break;
+		}
 		case "paint":
 			paint(diagram, step.x, step.y, step.segment, step.to);
 			break;
@@ -122,6 +169,8 @@ export function reverseStep(step: ProofStep): ProofStep
 	{
 		case "drag-segment":
 			return { ...step, trans: composeTrans(Transform(step.length, 1, "2"), step.trans) };
+		case "lemma":
+			return { ...step, reverse: !step.reverse };
 		case "paint":
 			return { ...step, to: step.from, from: step.to };
 		case "add-column":

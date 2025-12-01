@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { type Diagram, get, height, width } from "../data/Diagram";
+import type { DragRule } from "../data/Lemma";
 import type { Theme } from "../data/Options";
 import type { Point } from "../data/Point";
 import type { Segment } from "../data/Tile";
@@ -21,6 +22,8 @@ export interface DiagramViewProps
 	dragAnchor?: Point;
 	dragColumn?: number;
 	dragRow?: number;
+	dragRules?: DragRule[];
+	proposedDragRule?: DragRule;
 	cursor?: string;
 	scale: number;
 	maxWidth?: number;
@@ -37,6 +40,8 @@ export default function DiagramView(
 		dragAnchor,
 		dragColumn,
 		dragRow,
+		dragRules,
+		proposedDragRule,
 		cursor,
 		scale,
 		maxWidth,
@@ -274,7 +279,83 @@ export default function DiagramView(
 				ctx.fill();
 			}
 		}
-	}, [diagram, dragAnchor, dragColumn, dragRow, scale, theme]);
+
+		if (dragRules !== undefined)
+		{
+			ctx.lineCap = "round";
+			ctx.globalCompositeOperation = "destination-out";
+			ctx.lineWidth = 4;
+			drawDragRules();
+			ctx.globalCompositeOperation = "source-over";
+			ctx.lineWidth = 2;
+			drawDragRules();
+			ctx.lineCap = "butt";
+
+			function drawDragRules()
+			{
+				if (dragRules === undefined)
+					return;
+
+				ctx.strokeStyle = theme.colours[0];
+				ctx.fillStyle = ctx.strokeStyle;
+
+				let shouldDelete = false;
+				for (const rule of dragRules)
+				{
+					if (
+						rule.from.x === proposedDragRule?.from.x
+						&& rule.from.y === proposedDragRule?.from.y
+						&& rule.to.x === proposedDragRule?.to.x
+						&& rule.to.y === proposedDragRule?.to.y
+					)
+					{
+						shouldDelete = true;
+						continue;
+					}
+
+					drawDragRule(rule);
+				}
+				if (proposedDragRule !== undefined)
+				{
+					ctx.strokeStyle = shouldDelete ? theme.colours[1] : theme.colours[3];
+					ctx.fillStyle = ctx.strokeStyle;
+					drawDragRule(proposedDragRule);
+				}
+
+				function drawDragRule(rule: DragRule)
+				{
+					if (rule.from.x === rule.to.x && rule.from.y === rule.to.y)
+					{
+						ctx.beginPath();
+						ctx.ellipse((rule.from.x + 0.5) * scale, (rule.from.y + 0.5) * scale, 4, 4, 0, 0, Math.PI * 2);
+						ctx.fill();
+						ctx.stroke();
+					}
+					else
+					{
+						if (rule.altMode)
+							ctx.setLineDash([4, 6]);
+
+						const angle = Math.atan2(rule.to.y - rule.from.y, rule.to.x - rule.from.x);
+						const tipX = (rule.to.x + 0.5) * scale - Math.cos(angle) * 8;
+						const tipY = (rule.to.y + 0.5) * scale - Math.sin(angle) * 8;
+						ctx.beginPath();
+						ctx.moveTo((rule.from.x + 0.5) * scale, (rule.from.y + 0.5) * scale);
+						ctx.lineTo(tipX, tipY);
+						ctx.stroke();
+						ctx.setLineDash([]);
+						ctx.beginPath();
+						ctx.moveTo(tipX, tipY);
+						ctx.lineTo(tipX - Math.cos(angle - Math.PI / 6) * 4, tipY - Math.sin(angle - Math.PI / 6) * 4);
+						ctx.lineTo(tipX - Math.cos(angle + Math.PI / 6) * 4, tipY - Math.sin(angle + Math.PI / 6) * 4);
+						ctx.closePath();
+						ctx.fill();
+						ctx.stroke();
+					}
+				}
+			}
+		}
+	}, [diagram, dragAnchor, dragColumn, dragRow, dragRules, proposedDragRule, scale, theme]);
 
 	const [suppressContextMenu, setSuppressContextMenu] = useState(true);
 

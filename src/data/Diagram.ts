@@ -524,3 +524,61 @@ function followArc(diagram: Diagram, trans: Transform, arc: Map<string, [Point, 
 
 	return followArc(diagram, nextTrans, arc);
 }
+
+export function isSubdiagram(
+	small: Diagram,
+	refSmall: Diagram,
+	large: Diagram,
+	trans: Transform,
+	colourMap: number[],
+): boolean
+{
+	for (let y = 0; y < height(small); y++)
+	{
+		for (let x = 0; x < width(small); x++)
+		{
+			const smallTile = get(small, { x, y });
+			const refSmallTile = get(refSmall, { x, y });
+			const largeTile = getTrans(large, { x, y }, trans);
+			if (smallTile === undefined || refSmallTile === undefined || largeTile === undefined)
+				return false;
+
+			if (smallTile.type === " " && refSmallTile.type === " ")
+				continue;
+
+			if (smallTile.type !== largeTile.type)
+				return false;
+
+			if (!smallTile.colours.every((c, i) => largeTile.colours[i] === colourMap[c]))
+				return false;
+		}
+	}
+	return true;
+}
+
+export function writeSubdiagram(
+	small: Diagram,
+	refSmall: Diagram,
+	large: Diagram,
+	trans: Transform,
+	colourMap: number[],
+)
+{
+	for (let y = 0; y < height(small); y++)
+	{
+		for (let x = 0; x < width(small); x++)
+		{
+			const smallTile = get(small, { x, y });
+			const refSmallTile = get(refSmall, { x, y });
+			if (
+				smallTile === undefined || refSmallTile === undefined
+				|| smallTile.type === " " && refSmallTile.type === " "
+			)
+			{
+				continue;
+			}
+
+			setTrans(large, { x, y }, trans, Tile(smallTile.type, ...smallTile.colours.map(c => colourMap[c])));
+		}
+	}
+}

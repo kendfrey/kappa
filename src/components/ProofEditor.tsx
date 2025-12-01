@@ -12,13 +12,13 @@ import {
 } from "@phosphor-icons/react";
 import { produce } from "immer";
 import { useEffect, useMemo, useState } from "react";
-import { Diagram, findDraggableSegment, get, getArc, getSignature } from "../data/Diagram";
-import type { Lemma } from "../data/Lemma";
+import { Diagram, findDraggableSegment, get, getArc, getSignature, getTrans, height, width } from "../data/Diagram";
+import type { DragRule, Lemma } from "../data/Lemma";
 import type { Options } from "../data/Options";
 import type { Point } from "../data/Point";
 import type { Proof } from "../data/Proof";
 import { applyStep, isValid, type ProofStep, reverseStep } from "../data/ProofStep";
-import { Transform } from "../data/Transform";
+import { composeTrans, symmetries, Transform, transformPoint } from "../data/Transform";
 import type { Workspace } from "../data/Workspace";
 import { type Updater, useImmerState } from "../hooks";
 import type { WorkspaceSelection } from "./App";
@@ -47,8 +47,8 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 				: proof.rhs !== null
 				? { side: "rhs", index: proof.rhs[1].length }
 				: { side: "lhs", index: 0 },
-			lhsDiagrams: buildDiagrams(proof.lhs),
-			rhsDiagrams: buildDiagrams(proof.rhs),
+			lhsDiagrams: buildDiagrams(proof.lhs, workspace.lemmas),
+			rhsDiagrams: buildDiagrams(proof.rhs, workspace.lemmas),
 			dragAnchor: undefined,
 			dragCursor: undefined,
 			rowCol: undefined,
@@ -64,15 +64,15 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 			if (s.proof.lhs === null && workspace.proofs[index].lhs !== null)
 			{
 				s.proof.lhs = workspace.proofs[index].lhs;
-				s.lhsDiagrams = buildDiagrams(s.proof.lhs);
+				s.lhsDiagrams = buildDiagrams(s.proof.lhs, workspace.lemmas);
 			}
 			if (s.proof.rhs === null && workspace.proofs[index].rhs !== null)
 			{
 				s.proof.rhs = workspace.proofs[index].rhs;
-				s.rhsDiagrams = buildDiagrams(s.proof.rhs);
+				s.rhsDiagrams = buildDiagrams(s.proof.rhs, workspace.lemmas);
 			}
 		});
-	}, [workspace.proofs, index, updateCoordinatedState]);
+	}, [workspace, index, updateCoordinatedState]);
 
 	// Sync changes from this component's state back to the workspace.
 	useEffect(() =>
@@ -116,6 +116,39 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 				&& coordinatedState.current.index === coordinatedState.proof.rhs?.[1].length;
 			break;
 	}
+
+	const [dragLemmas, altDragLemmas] = useMemo(() =>
+	{
+		const dragLemmas = new Map<string, [Lemma, Transform, boolean][]>();
+		const altDragLemmas = new Map<string, [Lemma, Transform, boolean][]>();
+		for (const lemma of workspace.lemmas)
+		{
+			addRules(lemma.forwardRules, false);
+			addRules(lemma.reverseRules, true);
+
+			function addRules(rules: DragRule[], reverse: boolean)
+			{
+				for (const rule of rules)
+				{
+					const delta = { x: rule.to.x - rule.from.x, y: rule.to.y - rule.from.y };
+					for (const symm of symmetries)
+					{
+						const transformedDelta = transformPoint(delta, Transform(0, 0, symm));
+						const transform = composeTrans(
+							Transform(-rule.from.x, -rule.from.y, "0"),
+							Transform(0, 0, symm),
+						);
+						const key = `${transformedDelta.x},${transformedDelta.y}`;
+						const lemmas = rule.altMode ? altDragLemmas : dragLemmas;
+						if (!lemmas.has(key))
+							lemmas.set(key, []);
+						lemmas.get(key)!.push([lemma, transform, reverse]);
+					}
+				}
+			}
+		}
+		return [dragLemmas, altDragLemmas];
+	}, [workspace.lemmas]);
 
 	const canDeleteSide = coordinatedState.proof.lhs !== null && coordinatedState.proof.rhs !== null;
 
@@ -167,8 +200,8 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 			case "drag":
 				updateCoordinatedState(s =>
 				{
-					s.dragAnchor = e;
-					s.dragCursor = e;
+					s.dragAnchor = { x: e.x, y: e.y };
+					s.dragCursor = { x: e.x, y: e.y };
 				});
 				break;
 			case "paint":
@@ -231,47 +264,47 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 		});
 	}
 
-	function onDrag(to: Point)
+	function onDrag(e: DiagramPointerEvent)
 	{
 		updateCoordinatedState(s =>
 		{
 			if (s.dragAnchor === undefined || s.dragCursor === undefined)
 			{
-				s.dragCursor = to;
+				s.dragCursor = { x: e.x, y: e.y };
 				return;
 			}
 
-			while (s.dragCursor.x < to.x)
+			while (s.dragCursor.x < e.x)
 			{
 				s.dragCursor.x++;
-				tryDrag(s);
+				tryDrag(s, e);
 			}
-			while (s.dragCursor.x > to.x)
+			while (s.dragCursor.x > e.x)
 			{
 				s.dragCursor.x--;
-				tryDrag(s);
+				tryDrag(s, e);
 			}
-			while (s.dragCursor.y < to.y)
+			while (s.dragCursor.y < e.y)
 			{
 				s.dragCursor.y++;
-				tryDrag(s);
+				tryDrag(s, e);
 			}
-			while (s.dragCursor.y > to.y)
+			while (s.dragCursor.y > e.y)
 			{
 				s.dragCursor.y--;
-				tryDrag(s);
+				tryDrag(s, e);
 			}
 		});
 	}
 
-	function tryDrag(s: CoordinatedState)
+	function tryDrag(s: CoordinatedState, e: DiagramPointerEvent)
 	{
-		const step = getDragStep(s);
+		const step = getDragStep(s, e);
 		if (step !== undefined && doStep(s, step[0]))
 			s.dragAnchor = step[1];
 	}
 
-	function getDragStep(s: CoordinatedState): [ProofStep, Point] | undefined
+	function getDragStep(s: CoordinatedState, e: DiagramPointerEvent): [ProofStep, Point] | undefined
 	{
 		if (s.dragAnchor === undefined || s.dragCursor === undefined)
 			return;
@@ -283,9 +316,19 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 		const diagrams = side === "lhs" ? s.lhsDiagrams : s.rhsDiagrams;
 		const diagram = diagrams[s.proof[side][1].length];
 
-		const segment = getSegmentDragStep(diagram, s.dragAnchor, s.dragCursor);
-		if (segment !== undefined)
-			return [{ type: "drag-segment", ...segment[0] }, segment[1]];
+		if (!e.raw.ctrlKey)
+		{
+			const segment = getSegmentDragStep(diagram, s.dragAnchor, s.dragCursor);
+			if (segment !== undefined)
+				return [{ type: "drag-segment", ...segment[0] }, segment[1]];
+		}
+
+		const primaryRules = e.raw.shiftKey ? altDragLemmas : dragLemmas;
+		const secondaryRules = e.raw.shiftKey ? dragLemmas : altDragLemmas;
+		const lemma = getLemmaDragStep(diagram, s.dragAnchor, s.dragCursor, primaryRules)
+			?? getLemmaDragStep(diagram, s.dragAnchor, s.dragCursor, secondaryRules);
+		if (lemma !== undefined)
+			return lemma;
 	}
 
 	function getSegmentDragStep(
@@ -318,6 +361,72 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 			if (segment !== undefined)
 				return [segment, { x: from.x, y: from.y - 1 }];
 		}
+	}
+
+	function getLemmaDragStep(
+		diagram: Diagram,
+		from: Point,
+		to: Point,
+		rulesMap: Map<string, [Lemma, Transform, boolean][]>,
+	): [ProofStep, Point] | undefined
+	{
+		const delta = { x: to.x - from.x, y: to.y - from.y };
+		if (delta.x === 0 && delta.y === 0)
+			return undefined;
+
+		const rules = rulesMap.get(`${delta.x},${delta.y}`);
+		if (rules === undefined)
+			return undefined;
+
+		nextRule:
+		for (const [lemma, baseTransform, reverse] of rules)
+		{
+			const transform = composeTrans(baseTransform, Transform(from.x, from.y, "0"));
+			const fromDiagram = reverse ? lemma.rhs : lemma.lhs;
+			const toDiagram = reverse ? lemma.lhs : lemma.rhs;
+			const colourMap: (number | undefined)[] = options.theme.colours.map(() => undefined);
+
+			for (let y = 0; y < height(fromDiagram); y++)
+			{
+				for (let x = 0; x < width(fromDiagram); x++)
+				{
+					const tile = getTrans(diagram, { x, y }, transform);
+					const fromTile = get(fromDiagram, { x, y });
+					const toTile = get(toDiagram, { x, y });
+
+					if (fromTile === undefined || toTile === undefined)
+						continue nextRule;
+
+					if (fromTile.type === " " && toTile.type === " ")
+						continue;
+
+					if (tile === undefined || tile.type !== fromTile.type)
+						continue nextRule;
+
+					for (let i = 0; i < fromTile.colours.length; i++)
+					{
+						const fromColour = fromTile.colours[i];
+						const colour = tile.colours[i];
+
+						if (colourMap[fromColour] === undefined)
+							colourMap[fromColour] = colour;
+						else if (colourMap[fromColour] !== colour)
+							continue nextRule;
+					}
+				}
+			}
+
+			const fallbackColour = colourMap.find(c => c !== undefined) ?? 0;
+			const step: ProofStep = {
+				type: "lemma",
+				id: lemma.id,
+				reverse,
+				trans: transform,
+				colourMap: colourMap.map(c => c ?? fallbackColour),
+			};
+			return [step, to];
+		}
+		return undefined;
 	}
 
 	function onDragRowCol(to: number)
@@ -355,12 +464,12 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 		const diagrams = side === "lhs" ? s.lhsDiagrams : s.rhsDiagrams;
 		const diagram = diagrams[s.proof[side][1].length];
 
-		if (!isValid(diagram, step))
+		if (!isValid(diagram, step, workspace.lemmas))
 			return false;
 
 		s.proof[side][1].push(step);
 		s.current.index = s.proof[side][1].length;
-		diagrams.push(produce(diagram, d => applyStep(d, step)));
+		diagrams.push(produce(diagram, d => applyStep(d, step, workspace.lemmas)));
 		return true;
 	}
 
@@ -406,6 +515,8 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 			lhs,
 			rhs,
 			steps,
+			forwardRules: [],
+			reverseRules: [],
 			axioms: {}, // TODO
 		};
 
@@ -436,6 +547,8 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 			lhs: coordinatedState.proof.lhs[0],
 			rhs: coordinatedState.proof.rhs[0],
 			steps: null,
+			forwardRules: [],
+			reverseRules: [],
 			axioms: { [id]: 1 },
 		};
 
@@ -610,7 +723,7 @@ type CoordinatedState = {
 	rowCol: number | undefined;
 };
 
-function buildDiagrams(side: [Diagram, ProofStep[]] | null): Diagram[]
+function buildDiagrams(side: [Diagram, ProofStep[]] | null, context: Lemma[]): Diagram[]
 {
 	const diagrams: Diagram[] = [];
 	if (side !== null)
@@ -618,7 +731,7 @@ function buildDiagrams(side: [Diagram, ProofStep[]] | null): Diagram[]
 		diagrams.push(side[0]);
 
 		for (const step of side[1])
-			diagrams.push(produce(diagrams[diagrams.length - 1], d => applyStep(d, step)));
+			diagrams.push(produce(diagrams[diagrams.length - 1], d => applyStep(d, step, context)));
 	}
 	return diagrams;
 }

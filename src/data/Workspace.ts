@@ -39,6 +39,8 @@ export const testWorkspace: Workspace = {
 		lhs: d3,
 		rhs: d4,
 		steps: null,
+		forwardRules: [],
+		reverseRules: [],
 		axioms: { "477f6187-7528-4d7c-923a-9d49d503ecb0": 1 },
 	}],
 	proofs: [],
