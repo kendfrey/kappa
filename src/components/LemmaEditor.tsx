@@ -115,7 +115,13 @@ export default function LemmaEditor({ workspace, updateWorkspace, options, updat
 							w.lemmas[index].name = e.target.value;
 						})}
 				/>
-				{isAxiom ? <Checkbox label="Track usages" checked={track} onChange={setTrack} /> : "TODO: usages"}
+				{isAxiom
+					? <Checkbox label="Track usages" checked={track} onChange={setTrack} />
+					: Object.entries(lemma.axioms)
+						.filter(([axiom]) => !workspace.ignoredAxioms[axiom])
+						.map(([axiom, count]) =>
+							`${workspace.lemmas.find(l => l.id === axiom)?.name ?? axiom}: ${count}`
+						).join(" - ")}
 				{ZoomControls(updateOptions)}
 			</div>
 			<div className="editor">

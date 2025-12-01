@@ -1,4 +1,5 @@
 .toolbar {
+	align-items: center;
 	padding: var(--gap);
 	border-bottom: var(--border);
 	background-color: var(--highlight-1);

@@ -509,6 +509,17 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 			);
 		}
 
+		const axioms: Record<string, number> = {};
+		for (const step of steps.filter(s => s.type === "lemma"))
+		{
+			for (const [axiom, count] of Object.entries(workspace.lemmas.find(l => l.id === step.id)?.axioms ?? {}))
+			{
+				if (axioms[axiom] === undefined)
+					axioms[axiom] = 0;
+
+				axioms[axiom] += count;
+			}
+		}
 		const lemma: Lemma = {
 			id,
 			name,
@@ -517,7 +528,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 			steps,
 			forwardRules: [],
 			reverseRules: [],
-			axioms: {}, // TODO
+			axioms,
 		};
 
 		setSelection({ type: "lemma", index: workspace.lemmas.length });
