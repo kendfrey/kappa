@@ -9,6 +9,7 @@ import {
 	HandTapIcon,
 	LinkSimpleHorizontalIcon,
 	PaintBrushHouseholdIcon,
+	ScribbleIcon,
 	TrashIcon,
 } from "@phosphor-icons/react";
 import { produce } from "immer";
@@ -758,21 +759,39 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 						</>
 					)}
 			</div>
-			<div className="editor">
-				<DiagramView
-					diagram={diagram ?? Diagram(1, 1)}
-					dragAnchor={coordinatedState.dragAnchor ?? coordinatedState.dragCursor}
-					dragColumn={tool === "column" ? coordinatedState.rowCol : undefined}
-					dragRow={tool === "row" ? coordinatedState.rowCol : undefined}
-					cursor={cursor}
-					scale={options.scale}
-					theme={options.theme}
-					onClick={onClick}
-					onPointerDown={onPointerDown}
-					onPointerUp={onPointerUp}
-					onPointerMove={onPointerMove}
-					onPointerLeave={onPointerLeave}
-				/>
+			<div className="editor-panel">
+				<div className="flex floating-toolbar">
+					<div>
+						<button
+							onClick={() =>
+							{
+								setSelection({ type: "diagram", index: workspace.diagrams.length });
+								updateWorkspace(w =>
+								{
+									w.diagrams.push(diagram);
+								});
+							}}
+						>
+							<ScribbleIcon />
+						</button>
+					</div>
+				</div>
+				<div className="editor">
+					<DiagramView
+						diagram={diagram ?? Diagram(1, 1)}
+						dragAnchor={coordinatedState.dragAnchor ?? coordinatedState.dragCursor}
+						dragColumn={tool === "column" ? coordinatedState.rowCol : undefined}
+						dragRow={tool === "row" ? coordinatedState.rowCol : undefined}
+						cursor={cursor}
+						scale={options.scale}
+						theme={options.theme}
+						onClick={onClick}
+						onPointerDown={onPointerDown}
+						onPointerUp={onPointerUp}
+						onPointerMove={onPointerMove}
+						onPointerLeave={onPointerLeave}
+					/>
+				</div>
 			</div>
 			{canLemma
 				? (

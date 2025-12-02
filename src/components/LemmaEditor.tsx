@@ -1,23 +1,27 @@
 import "./Editor.css";
+import { CirclesThreeIcon, ScribbleIcon } from "@phosphor-icons/react";
 import { produce } from "immer";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { height, width } from "../data/Diagram";
 import type { DragRule } from "../data/Lemma";
 import type { Options } from "../data/Options";
-import { applyStep } from "../data/ProofStep";
+import type { Proof } from "../data/Proof";
+import { applyStep, reverseStep } from "../data/ProofStep";
 import type { Workspace } from "../data/Workspace";
 import type { Updater } from "../hooks";
+import type { WorkspaceSelection } from "./App";
 import Checkbox from "./Checkbox";
 import DiagramView, { type DiagramMouseEvent } from "./DiagramView";
 import Timeline from "./Timeline";
 import ZoomControls from "./ZoomControls";
 
-export default function LemmaEditor({ workspace, updateWorkspace, options, updateOptions, index }: {
+export default function LemmaEditor({ workspace, updateWorkspace, options, updateOptions, index, setSelection }: {
 	workspace: Workspace;
 	updateWorkspace: Updater<Workspace>;
 	options: Options;
 	updateOptions: Updater<Options>;
 	index: number;
+	setSelection: React.Dispatch<React.SetStateAction<WorkspaceSelection>>;
 })
 {
 	const lemma = workspace.lemmas[index];
@@ -151,17 +155,60 @@ export default function LemmaEditor({ workspace, updateWorkspace, options, updat
 						).join(" - ")}
 				{ZoomControls(updateOptions)}
 			</div>
-			<div className="editor">
-				<DiagramView
-					diagram={diagrams[current]}
-					scale={options.scale}
-					theme={options.theme}
-					dragRules={dragRules}
-					proposedDragRule={proposedDragRule}
-					onPointerDown={onPointerDown}
-					onPointerUp={onPointerUp}
-					onPointerMove={onPointerMove}
-				/>
+			<div className="editor-panel">
+				<div className="flex floating-toolbar">
+					{!isAxiom
+						&& (
+							<div>
+								<button>
+									<CirclesThreeIcon
+										weight="fill"
+										onClick={() =>
+										{
+											if (lemma.steps === null)
+												return;
+
+											const proof: Proof = {
+												lhs: [lemma.lhs, lemma.steps.slice(0, current)],
+												rhs: [lemma.rhs, lemma.steps.slice(current).map(reverseStep).reverse()],
+											};
+											setSelection({ type: "proof", index: workspace.proofs.length });
+											updateWorkspace(w =>
+											{
+												w.proofs.push(proof);
+											});
+										}}
+									/>
+								</button>
+							</div>
+						)}
+					<div>
+						<button
+							onClick={() =>
+							{
+								setSelection({ type: "diagram", index: workspace.diagrams.length });
+								updateWorkspace(w =>
+								{
+									w.diagrams.push(diagrams[current]);
+								});
+							}}
+						>
+							<ScribbleIcon />
+						</button>
+					</div>
+				</div>
+				<div className="editor">
+					<DiagramView
+						diagram={diagrams[current]}
+						scale={options.scale}
+						theme={options.theme}
+						dragRules={dragRules}
+						proposedDragRule={proposedDragRule}
+						onPointerDown={onPointerDown}
+						onPointerUp={onPointerUp}
+						onPointerMove={onPointerMove}
+					/>
+				</div>
 			</div>
 			<div className="flex" style={{ alignItems: "center", padding: "var(--gap)" }}>
 				<Timeline length={diagrams.length} current={current} onSetCurrent={setCurrent} />

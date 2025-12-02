@@ -101,6 +101,7 @@ export default function App()
 						options={options}
 						updateOptions={updateOptions}
 						index={selection.index}
+						setSelection={setSelection}
 					/>
 				);
 			case "proof":

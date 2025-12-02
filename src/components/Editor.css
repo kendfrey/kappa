@@ -15,8 +15,27 @@
 	background-color: var(--highlight-1);
 }
 
+.editor-panel {
+	display: flex;
+	position: relative;
+	flex: 1;
+	height: 0;
+}
+
+.floating-toolbar {
+	position: absolute;
+	top: var(--border-radius);
+	right: var(--border-radius);
+	gap: var(--gap);
+
+	& > div:has(> button) {
+		border-radius: var(--border-radius);
+		background: var(--bg);
+	}
+}
+
 .editor {
-	flex: 1 1;
+	flex: 1;
 	padding: var(--gap);
 	overflow: auto;
 	scrollbar-color: var(--highlight-1) var(--bg);

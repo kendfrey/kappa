@@ -289,7 +289,7 @@ export default function DiagramEditor(
 	}
 
 	return (
-		<div className="flex column main">
+		<div className="flex column main" tabIndex={0}>
 			<div className="flex toolbar">
 				<button onClick={() => setTool("draw")} data-selected={tool === "draw"}>
 					<PencilIcon />
