@@ -342,7 +342,7 @@ export default function App()
 						</div>
 					</div>
 				</div>
-				<div className="flex column" style={{ flex: 1, gap: 0, width: 0 }}>{getMainPanelContent()}</div>
+				{getMainPanelContent()}
 			</div>
 		</IconContext.Provider>
 	);

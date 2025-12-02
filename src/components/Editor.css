@@ -1,3 +1,13 @@
+.main {
+	flex: 1;
+	width: 0;
+	gap: 0;
+
+	&:focus-visible {
+		outline: none;
+	}
+}
+
 .toolbar {
 	align-items: center;
 	padding: var(--gap);

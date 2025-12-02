@@ -12,7 +12,7 @@ import {
 	TrashIcon,
 } from "@phosphor-icons/react";
 import { produce } from "immer";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Diagram, findDraggableSegment, get, getArc, getSignature, getTrans, height, width } from "../data/Diagram";
 import type { DragRule, Lemma } from "../data/Lemma";
 import type { Options } from "../data/Options";
@@ -178,6 +178,8 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 		{
 			case "drag":
 				return coordinatedState.dragAnchor !== undefined ? "grabbing" : "grab";
+			case "poke":
+				return "pointer";
 			case "column":
 				return "col-resize";
 			case "row":
@@ -188,6 +190,14 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 	}, [editable, coordinatedState, tool]);
 
 	const [isDragging, setIsDragging] = useState(false);
+
+	const mainRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() =>
+	{
+		if (document.activeElement === null || document.activeElement === document.body)
+			mainRef.current?.focus();
+	});
 
 	function onClick(e: DiagramMouseEvent)
 	{
@@ -288,6 +298,110 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 			s.rowCol = undefined;
 			s.dragCursor = undefined;
 		});
+	}
+
+	function onKeyDown(e: React.KeyboardEvent)
+	{
+		if ((e.target as HTMLElement).tagName === "INPUT")
+			return;
+
+		if ((e.ctrlKey || e.metaKey) && e.key === "z")
+		{
+			updateCoordinatedState(s =>
+			{
+				const side = s.current.side;
+				if (
+					s.proof[side] === null
+					|| s.proof[side][1].length === 0
+					|| s.current.index !== s.proof[side][1].length
+				)
+				{
+					return;
+				}
+
+				s.proof[side][1].pop();
+				(side === "lhs" ? s.lhsDiagrams : s.rhsDiagrams).pop();
+				s.current.index = s.proof[side][1].length;
+			});
+		}
+		else if (e.key === "ArrowLeft" || e.key === "a")
+		{
+			updateCoordinatedState(s =>
+			{
+				if (s.current.side === "lhs")
+				{
+					if (s.current.index > 0)
+						s.current.index--;
+				}
+				else if (s.proof.rhs !== null && s.current.index < s.proof.rhs[1].length)
+					s.current.index++;
+				else if (s.proof.lhs !== null)
+				{
+					s.current.side = "lhs";
+					s.current.index = s.proof.lhs[1].length;
+				}
+			});
+		}
+		else if (e.key === "ArrowRight" || e.key === "d")
+		{
+			updateCoordinatedState(s =>
+			{
+				if (s.current.side === "rhs")
+				{
+					if (s.current.index > 0)
+						s.current.index--;
+				}
+				else if (s.proof.lhs !== null && s.current.index < s.proof.lhs[1].length)
+					s.current.index++;
+				else if (s.proof.rhs !== null)
+				{
+					s.current.side = "rhs";
+					s.current.index = s.proof.rhs[1].length;
+				}
+			});
+		}
+		else if (e.key === "Home")
+		{
+			updateCoordinatedState(s =>
+			{
+				if (
+					s.current.side === "lhs"
+					|| (s.current.side === "rhs"
+						&& s.proof.lhs !== null
+						&& s.proof.rhs !== null
+						&& s.current.index === s.proof.rhs[1].length)
+				)
+				{
+					s.current.side = "lhs";
+					s.current.index = 0;
+				}
+				else if (s.proof.rhs !== null)
+				{
+					s.current.index = s.proof.rhs[1].length;
+				}
+			});
+		}
+		else if (e.key === "End")
+		{
+			updateCoordinatedState(s =>
+			{
+				if (
+					s.current.side === "rhs"
+					|| (s.current.side === "lhs"
+						&& s.proof.rhs !== null
+						&& s.proof.lhs !== null
+						&& s.current.index === s.proof.lhs[1].length)
+				)
+				{
+					s.current.side = "rhs";
+					s.current.index = 0;
+				}
+				else if (s.proof.lhs !== null)
+				{
+					s.current.index = s.proof.lhs[1].length;
+				}
+			});
+		}
 	}
 
 	function onDrag(e: DiagramMouseEvent)
@@ -599,7 +713,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 	}
 
 	return (
-		<>
+		<div ref={mainRef} className="flex column main" tabIndex={0} onKeyDown={onKeyDown}>
 			<div className="flex toolbar">
 				{editable
 					? (
@@ -751,7 +865,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 					</button>
 				)}
 			</div>
-		</>
+		</div>
 	);
 }
 

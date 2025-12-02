@@ -1,6 +1,6 @@
 import "./Editor.css";
 import { produce } from "immer";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { height, width } from "../data/Diagram";
 import type { DragRule } from "../data/Lemma";
 import type { Options } from "../data/Options";
@@ -57,6 +57,14 @@ export default function LemmaEditor({ workspace, updateWorkspace, options, updat
 		: undefined;
 	const [proposedDragRule, setProposedDragRule] = useState<DragRule>();
 
+	const mainRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() =>
+	{
+		if (document.activeElement === null || document.activeElement === document.body)
+			mainRef.current?.focus();
+	});
+
 	function onPointerDown(e: DiagramMouseEvent)
 	{
 		if (dragRules === undefined)
@@ -107,8 +115,23 @@ export default function LemmaEditor({ workspace, updateWorkspace, options, updat
 		setProposedDragRule({ ...proposedDragRule, to, altMode: e.raw.shiftKey });
 	}
 
+	function onKeyDown(e: React.KeyboardEvent)
+	{
+		if ((e.target as HTMLElement).tagName === "INPUT")
+			return;
+
+		if (e.key === "ArrowLeft" || e.key === "a")
+			setCurrent(c => Math.max(0, c - 1));
+		else if (e.key === "ArrowRight" || e.key === "d")
+			setCurrent(c => Math.min(diagrams.length - 1, c + 1));
+		else if (e.key === "Home")
+			setCurrent(0);
+		else if (e.key === "End")
+			setCurrent(diagrams.length - 1);
+	}
+
 	return (
-		<>
+		<div ref={mainRef} className="flex column main" tabIndex={0} onKeyDown={onKeyDown}>
 			<div className="flex toolbar">
 				<input
 					value={lemma.name}
@@ -143,6 +166,6 @@ export default function LemmaEditor({ workspace, updateWorkspace, options, updat
 			<div className="flex" style={{ alignItems: "center", padding: "var(--gap)" }}>
 				<Timeline length={diagrams.length} current={current} onSetCurrent={setCurrent} />
 			</div>
-		</>
+		</div>
 	);
 }

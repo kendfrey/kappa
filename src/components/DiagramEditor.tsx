@@ -289,7 +289,7 @@ export default function DiagramEditor(
 	}
 
 	return (
-		<>
+		<div className="flex column main">
 			<div className="flex toolbar">
 				<button onClick={() => setTool("draw")} data-selected={tool === "draw"}>
 					<PencilIcon />
@@ -320,7 +320,7 @@ export default function DiagramEditor(
 					onPointerLeave={onPointerLeave}
 				/>
 			</div>
-		</>
+		</div>
 	);
 }
 
