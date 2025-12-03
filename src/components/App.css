@@ -1,6 +1,7 @@
 :root {
 	--bg: white;
 	--fg: black;
+	--no: red;
 	--go: green;
 	--highlight-1: color(from var(--fg) srgb r g b / 0.1);
 	--highlight-2: color(from var(--fg) srgb r g b / 0.25);
@@ -50,6 +51,10 @@ input:not([type="checkbox"]):focus-visible,
 
 [data-dropzone="true"] {
 	outline: 2px solid var(--go);
+}
+
+[data-dependency="true"] {
+	outline: 2px solid var(--no);
 }
 
 button {
@@ -153,26 +158,27 @@ label {
 }
 
 .scroll {
+	box-sizing: border-box;
 	height: 100%;
+	padding: var(--gap);
 	overflow: auto;
 	scrollbar-color: var(--highlight-1) var(--bg);
+
+	& > * {
+		flex-shrink: 0;
+	}
 }
 
 .section-header {
 	align-items: center;
 	height: var(--ui-unit);
-	margin: var(--gap);
 	padding-left: var(--gap);
 	border-radius: var(--border-radius);
 	background-color: var(--highlight-1);
 	font-weight: bold;
 }
 
-.section-body {
-	margin: var(--gap);
-
-	& > div {
-		padding: var(--gap);
-		border-radius: var(--border-radius);
-	}
+.tile {
+	padding: var(--gap);
+	border-radius: var(--border-radius);
 }

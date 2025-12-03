@@ -6,10 +6,11 @@ import type { Workspace } from "../data/Workspace";
 import DiagramView from "./DiagramView";
 
 export default function ProofTile(
-	{ workspace, index, selected, theme, dragSignature, dropHandler, onClick }: {
+	{ workspace, index, selected, dependency, theme, dragSignature, dropHandler, onClick }: {
 		workspace: Workspace;
 		index: number;
 		selected: boolean;
+		dependency: boolean;
 		theme: Theme;
 		dragSignature: string | undefined;
 		dropHandler: (e: React.DragEvent<HTMLDivElement>, recipe: (draft: Workspace, diagram: Diagram) => void) => void;
@@ -23,8 +24,9 @@ export default function ProofTile(
 	const signature = useMemo(() => getSignature(template), [template]);
 	return (
 		<div
-			className="hover"
+			className="tile hover"
 			data-selected={selected}
+			data-dependency={dependency}
 			onClick={onClick}
 		>
 			<div className="flex" style={{ alignItems: "center" }}>

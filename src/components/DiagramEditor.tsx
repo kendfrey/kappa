@@ -4,6 +4,7 @@ import {
 	ArrowsOutLineVerticalIcon,
 	PaintBrushHouseholdIcon,
 	PencilIcon,
+	TrashIcon,
 } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState } from "react";
 import { addColumn, addRow, Diagram, get, height, paint, removeColumn, removeRow, set, width } from "../data/Diagram";
@@ -12,19 +13,19 @@ import { type Segment, Tile, transformSegment, transformTile } from "../data/Til
 import { invSymm, type Symmetry } from "../data/Transform";
 import type { Workspace } from "../data/Workspace";
 import { type Updater, useImmerState } from "../hooks";
+import type { WorkspaceSelection } from "./App";
 import ColourSelect from "./ColourSelect";
 import DiagramView, { type DiagramMouseEvent } from "./DiagramView";
 import ZoomControls from "./ZoomControls";
 
-export default function DiagramEditor(
-	{ workspace, updateWorkspace, options, updateOptions, index }: {
-		workspace: Workspace;
-		updateWorkspace: Updater<Workspace>;
-		options: Options;
-		updateOptions: Updater<Options>;
-		index: number;
-	},
-)
+export default function DiagramEditor({ workspace, updateWorkspace, options, updateOptions, index, setSelection }: {
+	workspace: Workspace;
+	updateWorkspace: Updater<Workspace>;
+	options: Options;
+	updateOptions: Updater<Options>;
+	index: number;
+	setSelection: React.Dispatch<React.SetStateAction<WorkspaceSelection>>;
+})
 {
 	const [coordinatedState, updateCoordinatedState] = useImmerState<CoordinatedState>(() => ({
 		diagram: workspace.diagrams[index],
@@ -304,6 +305,19 @@ export default function DiagramEditor(
 					<ArrowsOutLineVerticalIcon />
 				</button>
 				<ColourSelect colour={colour} setColour={setColour} theme={options.theme} />
+				<div style={{ flex: 1 }} />
+				<button
+					onClick={() =>
+					{
+						setSelection(undefined);
+						updateWorkspace(w =>
+						{
+							w.diagrams.splice(index, 1);
+						});
+					}}
+				>
+					<TrashIcon />
+				</button>
 				{ZoomControls(updateOptions)}
 			</div>
 			<div className="editor">

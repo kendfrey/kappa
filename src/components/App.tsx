@@ -32,17 +32,19 @@ export default function App()
 
 	const bg = options.theme.background;
 	const fg = options.theme.colours[0];
+	const no = options.theme.colours[1];
 	const go = options.theme.colours[3];
 
 	useEffect(() =>
 	{
 		document.documentElement.style.setProperty("--bg", bg);
 		document.documentElement.style.setProperty("--fg", fg);
+		document.documentElement.style.setProperty("--no", no);
 		document.documentElement.style.setProperty("--go", go);
 		const lightness = (c: string) =>
 			parseInt(c.slice(1, 3), 16) + parseInt(c.slice(3, 5), 16) + parseInt(c.slice(5, 7), 16);
 		document.documentElement.style.setProperty("color-scheme", lightness(bg) >= lightness(fg) ? "light" : "dark");
-	}, [bg, fg, go]);
+	}, [bg, fg, no, go]);
 
 	const [workspace, updateWorkspace] = useImmerLocalStorage<Workspace>("kappa-workspace", defaultWorkspace);
 
@@ -88,6 +90,13 @@ export default function App()
 		resetWorkspaceTimeoutRef.current = window.setTimeout(() => resetWorkspaceRef.current?.hidePopover(), 100);
 	}
 
+	const [dependencies, setDependencies] = useState<{ lemmas: Set<number>; proofs: Set<number>; }>();
+
+	useEffect(() =>
+	{
+		setDependencies(undefined);
+	}, [selection]);
+
 	function getMainPanelContent(): React.ReactNode
 	{
 		switch (selection?.type)
@@ -102,6 +111,7 @@ export default function App()
 						updateOptions={updateOptions}
 						index={selection.index}
 						setSelection={setSelection}
+						setDependencies={setDependencies}
 					/>
 				);
 			case "proof":
@@ -125,6 +135,7 @@ export default function App()
 						options={options}
 						updateOptions={updateOptions}
 						index={selection.index}
+						setSelection={setSelection}
 					/>
 				);
 			case undefined:
@@ -214,27 +225,25 @@ export default function App()
 							flex: 1,
 						}}
 					>
-						<div className="scroll">
+						<div className="flex column scroll">
 							<div className="flex section-header">
 								<ArrowsHorizontalIcon /> Lemmas
 							</div>
-							<div className="section-body">
-								{workspace.lemmas.map((_, i) =>
-								{
-									const selected = selection?.type === "lemma" && selection.index === i;
-									return (
-										<LemmaTile
-											key={i}
-											workspace={workspace}
-											index={i}
-											selected={selected}
-											theme={options.theme}
-											onClick={() =>
-												setSelection(selected ? undefined : { type: "lemma", index: i })}
-										/>
-									);
-								})}
-							</div>
+							{workspace.lemmas.map((_, i) =>
+							{
+								const selected = selection?.type === "lemma" && selection.index === i;
+								return (
+									<LemmaTile
+										key={i}
+										workspace={workspace}
+										index={i}
+										selected={selected}
+										dependency={dependencies?.lemmas.has(i) ?? false}
+										theme={options.theme}
+										onClick={() => setSelection(selected ? undefined : { type: "lemma", index: i })}
+									/>
+								);
+							})}
 							<div
 								className="flex section-header"
 								data-dropzone={dragSignature !== undefined}
@@ -257,89 +266,85 @@ export default function App()
 							>
 								<CirclesThreeIcon weight="fill" /> Proofs
 							</div>
-							<div className="section-body">
-								{workspace.proofs.map((_, i) =>
-								{
-									const selected = selection?.type === "proof" && selection.index === i;
-									return (
-										<ProofTile
-											key={i}
-											workspace={workspace}
-											index={i}
-											selected={selected}
-											theme={options.theme}
-											dragSignature={dragSignature}
-											dropHandler={(e, recipe) =>
+							{workspace.proofs.map((_, i) =>
+							{
+								const selected = selection?.type === "proof" && selection.index === i;
+								return (
+									<ProofTile
+										key={i}
+										workspace={workspace}
+										index={i}
+										selected={selected}
+										dependency={dependencies?.proofs.has(i) ?? false}
+										theme={options.theme}
+										dragSignature={dragSignature}
+										dropHandler={(e, recipe) =>
+										{
+											setDragSignature(undefined);
+											setSelection({ type: "proof", index: i });
+											const diagramIndex = parseInt(
+												e.dataTransfer.getData("application/kappa-diagram-index"),
+											);
+											updateWorkspace(w =>
 											{
-												setDragSignature(undefined);
-												setSelection({ type: "proof", index: i });
-												const diagramIndex = parseInt(
-													e.dataTransfer.getData("application/kappa-diagram-index"),
-												);
-												updateWorkspace(w =>
-												{
-													const diagram = w.diagrams.splice(diagramIndex, 1)[0];
-													recipe(w, diagram);
-												});
-											}}
-											onClick={() =>
-												setSelection(selected ? undefined : { type: "proof", index: i })}
-										/>
-									);
-								})}
-							</div>
+												const diagram = w.diagrams.splice(diagramIndex, 1)[0];
+												recipe(w, diagram);
+											});
+										}}
+										onClick={() => setSelection(selected ? undefined : { type: "proof", index: i })}
+									/>
+								);
+							})}
 							<div className="flex section-header">
 								<ScribbleIcon /> Diagrams
 							</div>
-							<div className="section-body">
-								{workspace.diagrams.map((d, i) =>
-								{
-									const selected = selection?.type === "diagram" && selection.index === i;
-									const continuous = isContinuous(d);
-									return (
-										<div
-											key={i}
-											className="hover"
-											data-selected={selected}
-											onClick={() =>
-												setSelection(selected ? undefined : { type: "diagram", index: i })}
-											draggable={continuous}
-											onDragStart={e =>
-											{
-												const img = (e.target as HTMLDivElement).firstElementChild as
-													| HTMLCanvasElement
-													| null;
-												if (img !== null)
-													e.dataTransfer.setDragImage(img, img.width, img.height);
-												e.dataTransfer.setData("application/kappa-diagram-index", i.toString());
-												e.dataTransfer.effectAllowed = "move";
-												setDragSignature(getSignature(d));
-											}}
-											onDragEnd={() =>
-											{
-												setDragSignature(undefined);
-											}}
-										>
-											<DiagramView diagram={d} scale={16} maxWidth={256} theme={options.theme} />
-										</div>
-									);
-								})}
-								<button
-									className="text-button"
-									style={{ margin: "var(--gap) 0" }}
-									onClick={() =>
-									{
-										setSelection({ type: "diagram", index: workspace.diagrams.length });
-										updateWorkspace(w =>
+							{workspace.diagrams.map((d, i) =>
+							{
+								const selected = selection?.type === "diagram" && selection.index === i;
+								const continuous = isContinuous(d);
+								return (
+									<div
+										key={i}
+										className="tile hover"
+										data-selected={selected}
+										onClick={() =>
+											setSelection(selected ? undefined : { type: "diagram", index: i })}
+										draggable={continuous}
+										onDragStart={e =>
 										{
-											w.diagrams.push(Diagram(4, 4));
-										});
-									}}
-								>
-									<PlusIcon />
-									New Diagram
-								</button>
-							</div>
+											const img = (e.target as HTMLDivElement).firstElementChild as
+												| HTMLCanvasElement
+												| null;
+											if (img !== null)
+												e.dataTransfer.setDragImage(img, img.width, img.height);
+											e.dataTransfer.setData("application/kappa-diagram-index", i.toString());
+											e.dataTransfer.effectAllowed = "move";
+											setDragSignature(getSignature(d));
+										}}
+										onDragEnd={() =>
+										{
+											setDragSignature(undefined);
+										}}
+									>
+										<DiagramView diagram={d} scale={16} maxWidth={256} theme={options.theme} />
+									</div>
+								);
+							})}
+							<button
+								className="text-button"
+								style={{ alignSelf: "start" }}
+								onClick={() =>
+								{
+									setSelection({ type: "diagram", index: workspace.diagrams.length });
+									updateWorkspace(w =>
+									{
+										w.diagrams.push(Diagram(4, 4));
+									});
+								}}
+							>
+								<PlusIcon />
+								New Diagram
+							</button>
 						</div>
 					</div>
 				</div>

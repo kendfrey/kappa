@@ -735,7 +735,6 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 								<ArrowsOutLineVerticalIcon />
 							</button>
 							<ColourSelect colour={colour} setColour={setColour} theme={options.theme} />
-							{ZoomControls(updateOptions)}
 						</>
 					)
 					: (
@@ -758,6 +757,20 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 							</button>
 						</>
 					)}
+				<div style={{ flex: 1 }} />
+				<button
+					onClick={() =>
+					{
+						setSelection(undefined);
+						updateWorkspace(w =>
+						{
+							w.proofs.splice(index, 1);
+						});
+					}}
+				>
+					<TrashIcon />
+				</button>
+				{ZoomControls(updateOptions)}
 			</div>
 			<div className="editor-panel">
 				<div className="flex floating-toolbar">

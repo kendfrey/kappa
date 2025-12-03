@@ -1,5 +1,5 @@
 import "./Editor.css";
-import { CirclesThreeIcon, ScribbleIcon } from "@phosphor-icons/react";
+import { CirclesThreeIcon, ScribbleIcon, TrashIcon } from "@phosphor-icons/react";
 import { produce } from "immer";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { height, width } from "../data/Diagram";
@@ -15,14 +15,19 @@ import DiagramView, { type DiagramMouseEvent } from "./DiagramView";
 import Timeline from "./Timeline";
 import ZoomControls from "./ZoomControls";
 
-export default function LemmaEditor({ workspace, updateWorkspace, options, updateOptions, index, setSelection }: {
-	workspace: Workspace;
-	updateWorkspace: Updater<Workspace>;
-	options: Options;
-	updateOptions: Updater<Options>;
-	index: number;
-	setSelection: React.Dispatch<React.SetStateAction<WorkspaceSelection>>;
-})
+export default function LemmaEditor(
+	{ workspace, updateWorkspace, options, updateOptions, index, setSelection, setDependencies }: {
+		workspace: Workspace;
+		updateWorkspace: Updater<Workspace>;
+		options: Options;
+		updateOptions: Updater<Options>;
+		index: number;
+		setSelection: React.Dispatch<React.SetStateAction<WorkspaceSelection>>;
+		setDependencies: React.Dispatch<
+			React.SetStateAction<{ lemmas: Set<number>; proofs: Set<number>; } | undefined>
+		>;
+	},
+)
 {
 	const lemma = workspace.lemmas[index];
 	const isAxiom = lemma.steps === null;
@@ -134,6 +139,39 @@ export default function LemmaEditor({ workspace, updateWorkspace, options, updat
 			setCurrent(diagrams.length - 1);
 	}
 
+	function deleteLemma()
+	{
+		const lemmas = new Set<number>();
+		for (let i = 0; i < workspace.lemmas.length; i++)
+		{
+			if (workspace.lemmas[i].steps?.some(s => s.type === "lemma" && s.id === lemma.id) === true)
+				lemmas.add(i);
+		}
+		const proofs = new Set<number>();
+		for (let i = 0; i < workspace.proofs.length; i++)
+		{
+			if (
+				workspace.proofs[i].lhs?.[1].some(s => s.type === "lemma" && s.id === lemma.id) == true
+				|| workspace.proofs[i].rhs?.[1].some(s => s.type === "lemma" && s.id === lemma.id) == true
+			)
+			{
+				proofs.add(i);
+			}
+		}
+
+		if (lemmas.size > 0 || proofs.size > 0)
+		{
+			setDependencies({ lemmas, proofs });
+			return;
+		}
+
+		setSelection(undefined);
+		updateWorkspace(w =>
+		{
+			w.lemmas.splice(index, 1);
+		});
+	}
+
 	return (
 		<div ref={mainRef} className="flex column main" tabIndex={0} onKeyDown={onKeyDown}>
 			<div className="flex toolbar">
@@ -153,6 +191,10 @@ export default function LemmaEditor({ workspace, updateWorkspace, options, updat
 						.map(([axiom, count]) =>
 							`${workspace.lemmas.find(l => l.id === axiom)?.name ?? axiom}: ${count}`
 						).join(" - ")}
+				<div style={{ flex: 1 }} />
+				<button onClick={deleteLemma}>
+					<TrashIcon />
+				</button>
 				{ZoomControls(updateOptions)}
 			</div>
 			<div className="editor-panel">

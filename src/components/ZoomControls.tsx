@@ -6,7 +6,6 @@ export default function ZoomControls(updateOptions: Updater<Options>)
 {
 	return (
 		<>
-			<div style={{ flex: 1 }} />
 			<button
 				onClick={() =>
 					updateOptions(o =>
