@@ -387,7 +387,7 @@ export default function App()
 								return (
 									<div
 										key={i}
-										className="tile hover"
+										className="tile"
 										data-selected={selected}
 										onClick={() =>
 											setSelection(selected ? undefined : { type: "diagram", index: i })}

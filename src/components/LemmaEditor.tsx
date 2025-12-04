@@ -199,31 +199,27 @@ export default function LemmaEditor(
 			</div>
 			<div className="editor-panel">
 				<div className="flex floating-toolbar">
-					{!isAxiom
-						&& (
-							<div>
-								<button>
-									<CirclesThreeIcon
-										weight="fill"
-										onClick={() =>
-										{
-											if (lemma.steps === null)
-												return;
-
-											const proof: Proof = {
-												lhs: [lemma.lhs, lemma.steps.slice(0, current)],
-												rhs: [lemma.rhs, lemma.steps.slice(current).map(reverseStep).reverse()],
-											};
-											setSelection({ type: "proof", index: workspace.proofs.length });
-											updateWorkspace(w =>
-											{
-												w.proofs.push(proof);
-											});
-										}}
-									/>
-								</button>
-							</div>
-						)}
+					<div>
+						<button>
+							<CirclesThreeIcon
+								weight="fill"
+								onClick={() =>
+								{
+									const proof: Proof = lemma.steps === null
+										? { lhs: [lemma.lhs, []], rhs: [lemma.rhs, []] }
+										: {
+											lhs: [lemma.lhs, lemma.steps.slice(0, current)],
+											rhs: [lemma.rhs, lemma.steps.slice(current).map(reverseStep).reverse()],
+										};
+									setSelection({ type: "proof", index: workspace.proofs.length });
+									updateWorkspace(w =>
+									{
+										w.proofs.push(proof);
+									});
+								}}
+							/>
+						</button>
+					</div>
 					<div>
 						<button
 							onClick={() =>

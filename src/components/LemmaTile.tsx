@@ -17,7 +17,7 @@ export default function LemmaTile({ workspace, index, collapsed, selected, depen
 
 	return (
 		<div
-			className="flex column tile hover"
+			className="flex column tile"
 			data-selected={selected}
 			data-dependency={dependency}
 			onClick={onClick}

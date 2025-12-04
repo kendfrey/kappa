@@ -30,7 +30,7 @@
 	background-color: var(--highlight-2);
 }
 
-button, select, option, .hover, .menu > *:not(.menu) {
+button, select, option, .tile, .hover, .menu > *:not(.menu) {
 	&:hover {
 		background-color: var(--highlight-1);
 	}

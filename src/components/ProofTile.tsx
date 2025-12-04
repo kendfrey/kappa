@@ -25,7 +25,7 @@ export default function ProofTile(
 	const signature = useMemo(() => getSignature(template), [template]);
 	return (
 		<div
-			className="tile hover"
+			className="tile"
 			data-selected={selected}
 			data-dependency={dependency}
 			onClick={onClick}
