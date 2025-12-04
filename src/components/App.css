@@ -169,12 +169,8 @@ label {
 	}
 }
 
-.section-header {
-	align-items: center;
-	height: var(--ui-unit);
-	padding-left: var(--gap);
-	border-radius: var(--border-radius);
-	background-color: var(--highlight-1);
+button.section-header {
+	padding-right: var(--gap);
 	font-weight: bold;
 }
 

@@ -19,6 +19,10 @@ export const defaultDarkTheme: Theme = {
 export type Options = {
 	theme: Theme;
 	scale: number;
+	lemmasCollapsed: boolean;
+	proofsCollapsed: boolean;
+	diagramsCollapsed: boolean;
+	sortLemmas: boolean;
 	selectedDiagramEditorTool: "draw" | "paint" | "column" | "row";
 	selectedProofEditorTool: "drag" | "poke" | "paint" | "column" | "row";
 	selectedColour: number;
@@ -27,6 +31,10 @@ export type Options = {
 export const defaultOptions: Options = {
 	theme: defaultLightTheme,
 	scale: 64,
+	lemmasCollapsed: false,
+	proofsCollapsed: false,
+	diagramsCollapsed: false,
+	sortLemmas: true,
 	selectedDiagramEditorTool: "draw",
 	selectedProofEditorTool: "drag",
 	selectedColour: 0,

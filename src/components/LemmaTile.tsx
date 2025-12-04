@@ -3,9 +3,10 @@ import type { Theme } from "../data/Options";
 import type { Workspace } from "../data/Workspace";
 import DiagramView from "./DiagramView";
 
-export default function LemmaTile({ workspace, index, selected, dependency, theme, onClick }: {
+export default function LemmaTile({ workspace, index, collapsed, selected, dependency, theme, onClick }: {
 	workspace: Workspace;
 	index: number;
+	collapsed: boolean;
 	selected: boolean;
 	dependency: boolean;
 	theme: Theme;
@@ -20,7 +21,7 @@ export default function LemmaTile({ workspace, index, selected, dependency, them
 			data-selected={selected}
 			data-dependency={dependency}
 			onClick={onClick}
-			style={{ overflow: "hidden" }}
+			style={{ overflow: "hidden", display: collapsed ? "none" : undefined }}
 		>
 			{lemma.name}
 			<div className="flex" style={{ alignItems: "center" }}>

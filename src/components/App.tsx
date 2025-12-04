@@ -1,6 +1,7 @@
 import "./App.css";
 import {
 	ArrowsHorizontalIcon,
+	CaretDownIcon,
 	CaretRightIcon,
 	CirclesThreeIcon,
 	FileArrowUpIcon,
@@ -11,8 +12,9 @@ import {
 	PlusIcon,
 	QuestionIcon,
 	ScribbleIcon,
+	SortAscendingIcon,
 } from "@phosphor-icons/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Diagram, getSignature, isContinuous } from "../data/Diagram";
 import { defaultOptions } from "../data/Options";
 import { defaultWorkspace, emptyWorkspace, testWorkspace, type Workspace } from "../data/Workspace";
@@ -94,8 +96,33 @@ export default function App()
 
 	useEffect(() =>
 	{
+		switch (selection?.type)
+		{
+			case "lemma":
+				updateOptions(o =>
+				{
+					o.lemmasCollapsed = false;
+				});
+				break;
+			case "proof":
+				updateOptions(o =>
+				{
+					o.proofsCollapsed = false;
+				});
+				break;
+			case "diagram":
+				updateOptions(o =>
+				{
+					o.diagramsCollapsed = false;
+				});
+				break;
+		}
+		setTimeout(
+			() => document.querySelector(".tile[data-selected='true']")?.scrollIntoView({ block: "nearest" }),
+			0,
+		);
 		setDependencies(undefined);
-	}, [selection]);
+	}, [selection, updateOptions]);
 
 	function getMainPanelContent(): React.ReactNode
 	{
@@ -142,6 +169,20 @@ export default function App()
 				return <></>;
 		}
 	}
+
+	const sortedLemmas = useMemo(() =>
+	{
+		if (!options.sortLemmas)
+			return workspace.lemmas.map((_, i) => i);
+		else
+		{
+			const collator = new Intl.Collator(undefined, { numeric: true });
+			return workspace.lemmas
+				.map((l, i) => [l, i] as const)
+				.sort((a, b) => collator.compare(a[0].name, b[0].name))
+				.map(([_, i]) => i);
+		}
+	}, [workspace.lemmas, options.sortLemmas]);
 
 	return (
 		<IconContext.Provider value={{ size: 20, weight: "bold" }}>
@@ -226,10 +267,31 @@ export default function App()
 						}}
 					>
 						<div className="flex column scroll">
-							<div className="flex section-header">
-								<ArrowsHorizontalIcon /> Lemmas
-							</div>
-							{workspace.lemmas.map((_, i) =>
+							<button
+								className="text-button section-header"
+								onClick={() =>
+									updateOptions(o =>
+									{
+										o.lemmasCollapsed = !o.lemmasCollapsed;
+									})}
+							>
+								<ArrowsHorizontalIcon />
+								Lemmas
+								<div style={{ flex: 1 }} />
+								{options.lemmasCollapsed ? <CaretRightIcon /> : <CaretDownIcon />}
+							</button>
+							<button
+								data-selected={options.sortLemmas}
+								style={{ display: options.lemmasCollapsed ? "none" : undefined }}
+								onClick={() =>
+									updateOptions(o =>
+									{
+										o.sortLemmas = !o.sortLemmas;
+									})}
+							>
+								<SortAscendingIcon />
+							</button>
+							{sortedLemmas.map(i =>
 							{
 								const selected = selection?.type === "lemma" && selection.index === i;
 								return (
@@ -237,6 +299,7 @@ export default function App()
 										key={i}
 										workspace={workspace}
 										index={i}
+										collapsed={options.lemmasCollapsed}
 										selected={selected}
 										dependency={dependencies?.lemmas.has(i) ?? false}
 										theme={options.theme}
@@ -244,8 +307,13 @@ export default function App()
 									/>
 								);
 							})}
-							<div
-								className="flex section-header"
+							<button
+								className="text-button section-header"
+								onClick={() =>
+									updateOptions(o =>
+									{
+										o.proofsCollapsed = !o.proofsCollapsed;
+									})}
 								data-dropzone={dragSignature !== undefined}
 								onDragOver={e =>
 								{
@@ -264,8 +332,11 @@ export default function App()
 									});
 								}}
 							>
-								<CirclesThreeIcon weight="fill" /> Proofs
-							</div>
+								<CirclesThreeIcon weight="fill" />
+								Proofs
+								<div style={{ flex: 1 }} />
+								{options.proofsCollapsed ? <CaretRightIcon /> : <CaretDownIcon />}
+							</button>
 							{workspace.proofs.map((_, i) =>
 							{
 								const selected = selection?.type === "proof" && selection.index === i;
@@ -274,6 +345,7 @@ export default function App()
 										key={i}
 										workspace={workspace}
 										index={i}
+										collapsed={options.proofsCollapsed}
 										selected={selected}
 										dependency={dependencies?.proofs.has(i) ?? false}
 										theme={options.theme}
@@ -295,9 +367,19 @@ export default function App()
 									/>
 								);
 							})}
-							<div className="flex section-header">
-								<ScribbleIcon /> Diagrams
-							</div>
+							<button
+								className="text-button section-header"
+								onClick={() =>
+									updateOptions(o =>
+									{
+										o.diagramsCollapsed = !o.diagramsCollapsed;
+									})}
+							>
+								<ScribbleIcon />
+								Diagrams
+								<div style={{ flex: 1 }} />
+								{options.diagramsCollapsed ? <CaretRightIcon /> : <CaretDownIcon />}
+							</button>
 							{workspace.diagrams.map((d, i) =>
 							{
 								const selected = selection?.type === "diagram" && selection.index === i;
@@ -309,6 +391,7 @@ export default function App()
 										data-selected={selected}
 										onClick={() =>
 											setSelection(selected ? undefined : { type: "diagram", index: i })}
+										style={{ display: options.diagramsCollapsed ? "none" : undefined }}
 										draggable={continuous}
 										onDragStart={e =>
 										{

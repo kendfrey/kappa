@@ -6,9 +6,10 @@ import type { Workspace } from "../data/Workspace";
 import DiagramView from "./DiagramView";
 
 export default function ProofTile(
-	{ workspace, index, selected, dependency, theme, dragSignature, dropHandler, onClick }: {
+	{ workspace, index, collapsed, selected, dependency, theme, dragSignature, dropHandler, onClick }: {
 		workspace: Workspace;
 		index: number;
+		collapsed: boolean;
 		selected: boolean;
 		dependency: boolean;
 		theme: Theme;
@@ -28,6 +29,7 @@ export default function ProofTile(
 			data-selected={selected}
 			data-dependency={dependency}
 			onClick={onClick}
+			style={{ display: collapsed ? "none" : undefined }}
 		>
 			<div className="flex" style={{ alignItems: "center" }}>
 				{proof.lhs !== null
