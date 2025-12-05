@@ -8,6 +8,7 @@ export type Workspace = {
 	proofs: Proof[];
 	diagrams: Diagram[];
 	ignoredAxioms: Record<string, true>;
+	collapsedLemmas: Record<string, true>;
 };
 
 export const emptyWorkspace: Workspace = {
@@ -15,6 +16,7 @@ export const emptyWorkspace: Workspace = {
 	proofs: [],
 	diagrams: [],
 	ignoredAxioms: {},
+	collapsedLemmas: {},
 };
 
 // TODO: just for testing
@@ -46,6 +48,7 @@ export const testWorkspace: Workspace = {
 	proofs: [],
 	diagrams: [d1, d2],
 	ignoredAxioms: {},
+	collapsedLemmas: {},
 };
 
 export const defaultWorkspace = testWorkspace;

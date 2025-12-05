@@ -32,6 +32,8 @@ export default function LemmaEditor(
 	const lemma = workspace.lemmas[index];
 	const isAxiom = lemma.steps === null;
 
+	const [name, setName] = useState(lemma.name);
+
 	const track = workspace.ignoredAxioms[lemma.id] !== true;
 	function setTrack(t: boolean)
 	{
@@ -176,13 +178,18 @@ export default function LemmaEditor(
 		<div ref={mainRef} className="flex column main" tabIndex={0} onKeyDown={onKeyDown}>
 			<div className="flex toolbar">
 				<input
-					value={lemma.name}
+					value={name}
+					data-conflict={name !== workspace.lemmas[index].name}
 					style={{ width: 240 }}
 					onChange={e =>
+					{
+						setName(e.target.value);
 						updateWorkspace(w =>
 						{
-							w.lemmas[index].name = e.target.value;
-						})}
+							if (!w.lemmas.some(l => l.name === e.target.value))
+								w.lemmas[index].name = e.target.value;
+						});
+					}}
 				/>
 				{isAxiom
 					? <Checkbox label="Track usages" checked={track} onChange={setTrack} />

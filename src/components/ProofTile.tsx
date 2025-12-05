@@ -27,7 +27,7 @@ export default function ProofTile(
 		<div
 			className="tile"
 			data-selected={selected}
-			data-dependency={dependency}
+			data-conflict={dependency}
 			onClick={onClick}
 			style={{ display: collapsed ? "none" : undefined }}
 		>

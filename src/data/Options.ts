@@ -22,7 +22,6 @@ export type Options = {
 	lemmasCollapsed: boolean;
 	proofsCollapsed: boolean;
 	diagramsCollapsed: boolean;
-	sortLemmas: boolean;
 	selectedDiagramEditorTool: "draw" | "paint" | "column" | "row";
 	selectedProofEditorTool: "drag" | "poke" | "paint" | "column" | "row";
 	selectedColour: number;
@@ -34,7 +33,6 @@ export const defaultOptions: Options = {
 	lemmasCollapsed: false,
 	proofsCollapsed: false,
 	diagramsCollapsed: false,
-	sortLemmas: true,
 	selectedDiagramEditorTool: "draw",
 	selectedProofEditorTool: "drag",
 	selectedColour: 0,

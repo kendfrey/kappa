@@ -12,10 +12,10 @@ import {
 	PlusIcon,
 	QuestionIcon,
 	ScribbleIcon,
-	SortAscendingIcon,
 } from "@phosphor-icons/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Diagram, getSignature, isContinuous } from "../data/Diagram";
+import type { Lemma } from "../data/Lemma";
 import { defaultOptions } from "../data/Options";
 import { defaultWorkspace, emptyWorkspace, testWorkspace, type Workspace } from "../data/Workspace";
 import { useImmerLocalStorage } from "../hooks";
@@ -96,6 +96,28 @@ export default function App()
 
 	useEffect(() =>
 	{
+		if (dependencies === undefined)
+			return;
+
+		updateWorkspace(w =>
+		{
+			for (const i of dependencies.lemmas)
+			{
+				const path = w.lemmas[i].name.split("/");
+				let prefix = path[0];
+				for (const part of path.slice(1))
+				{
+					if (w.collapsedLemmas[prefix] === true)
+						delete w.collapsedLemmas[prefix];
+
+					prefix += "/" + part;
+				}
+			}
+		});
+	}, [dependencies, updateWorkspace]);
+
+	useEffect(() =>
+	{
 		switch (selection?.type)
 		{
 			case "lemma":
@@ -170,19 +192,77 @@ export default function App()
 		}
 	}
 
-	const sortedLemmas = useMemo(() =>
+	const lemmaTree = useMemo(() =>
 	{
-		if (!options.sortLemmas)
-			return workspace.lemmas.map((_, i) => i);
-		else
+		type LemmaTree = { lemma: [Lemma, number] | undefined; children: Record<string, LemmaTree>; };
+		const root: LemmaTree = { lemma: undefined, children: {} };
+		for (let i = 0; i < workspace.lemmas.length; i++)
 		{
-			const collator = new Intl.Collator(undefined, { numeric: true });
-			return workspace.lemmas
-				.map((l, i) => [l, i] as const)
-				.sort((a, b) => collator.compare(a[0].name, b[0].name))
-				.map(([_, i]) => i);
+			const lemma = workspace.lemmas[i];
+			const parts = lemma.name.split("/");
+			let node = root;
+			for (const part of parts)
+			{
+				if (!(part in node.children))
+					node.children[part] = { lemma: undefined, children: {} };
+
+				node = node.children[part];
+			}
+			node.lemma = [lemma, i];
 		}
-	}, [workspace.lemmas, options.sortLemmas]);
+
+		const collator = new Intl.Collator(undefined, { numeric: true });
+		return listify(root.children, "");
+
+		function listify(children: Record<string, LemmaTree>, path: string): LemmaFolder[]
+		{
+			return Object.entries(children)
+				.sort((a, b) => collator.compare(a[0], b[0]))
+				.map(([name, child]) => ({
+					name: path + name,
+					lemma: child.lemma,
+					children: listify(child.children, path + name + "/"),
+				}));
+		}
+	}, [workspace.lemmas]);
+
+	function unfoldLemmas(folders: LemmaFolder[], hidden: boolean): React.ReactNode[]
+	{
+		return folders.map(folder =>
+		{
+			const i = folder.lemma?.[1];
+			const selected = selection?.type === "lemma" && selection.index === i;
+			const collapsed = workspace.collapsedLemmas[folder.name] === true;
+			return [
+				<LemmaTile
+					key={i ?? folder.name}
+					name={folder.name}
+					lemma={folder.lemma?.[0]}
+					collapsed={folder.children.length > 0 ? collapsed : undefined}
+					hidden={hidden || options.lemmasCollapsed}
+					selected={selected}
+					dependency={i !== undefined && (dependencies?.lemmas.has(i) ?? false)}
+					theme={options.theme}
+					onClick={() =>
+					{
+						if (i !== undefined)
+							setSelection(selected ? undefined : { type: "lemma", index: i });
+					}}
+					onCollapseToggle={() =>
+					{
+						updateWorkspace(w =>
+						{
+							if (w.collapsedLemmas[folder.name])
+								delete w.collapsedLemmas[folder.name];
+							else
+								w.collapsedLemmas[folder.name] = true;
+						});
+					}}
+				/>,
+				...unfoldLemmas(folder.children, hidden || collapsed),
+			];
+		});
+	}
 
 	return (
 		<IconContext.Provider value={{ size: 20, weight: "bold" }}>
@@ -280,33 +360,7 @@ export default function App()
 								<div style={{ flex: 1 }} />
 								{options.lemmasCollapsed ? <CaretRightIcon /> : <CaretDownIcon />}
 							</button>
-							<button
-								data-selected={options.sortLemmas}
-								style={{ display: options.lemmasCollapsed ? "none" : undefined }}
-								onClick={() =>
-									updateOptions(o =>
-									{
-										o.sortLemmas = !o.sortLemmas;
-									})}
-							>
-								<SortAscendingIcon />
-							</button>
-							{sortedLemmas.map(i =>
-							{
-								const selected = selection?.type === "lemma" && selection.index === i;
-								return (
-									<LemmaTile
-										key={i}
-										workspace={workspace}
-										index={i}
-										collapsed={options.lemmasCollapsed}
-										selected={selected}
-										dependency={dependencies?.lemmas.has(i) ?? false}
-										theme={options.theme}
-										onClick={() => setSelection(selected ? undefined : { type: "lemma", index: i })}
-									/>
-								);
-							})}
+							{unfoldLemmas(lemmaTree, false)}
 							<button
 								className="text-button section-header"
 								onClick={() =>
@@ -442,3 +496,9 @@ export type WorkspaceSelection =
 	| { type: "proof"; index: number; }
 	| { type: "diagram"; index: number; }
 	| undefined;
+
+type LemmaFolder = {
+	name: string;
+	lemma: [Lemma, number] | undefined;
+	children: LemmaFolder[];
+};
