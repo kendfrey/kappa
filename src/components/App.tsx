@@ -103,14 +103,14 @@ export default function App()
 		{
 			for (const i of dependencies.lemmas)
 			{
-				const path = w.lemmas[i].name.split("/");
+				const path = w.lemmas[i].name.split(".");
 				let prefix = path[0];
 				for (const part of path.slice(1))
 				{
 					if (w.collapsedLemmas[prefix] === true)
 						delete w.collapsedLemmas[prefix];
 
-					prefix += "/" + part;
+					prefix += "." + part;
 				}
 			}
 		});
@@ -199,7 +199,7 @@ export default function App()
 		for (let i = 0; i < workspace.lemmas.length; i++)
 		{
 			const lemma = workspace.lemmas[i];
-			const parts = lemma.name.split("/");
+			const parts = lemma.name.split(".");
 			let node = root;
 			for (const part of parts)
 			{
@@ -221,7 +221,7 @@ export default function App()
 				.map(([name, child]) => ({
 					name: path + name,
 					lemma: child.lemma,
-					children: listify(child.children, path + name + "/"),
+					children: listify(child.children, path + name + "."),
 				}));
 		}
 	}, [workspace.lemmas]);

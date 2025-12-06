@@ -2,7 +2,7 @@ import {
 	ArrowsHorizontalIcon,
 	CaretDownIcon,
 	CaretRightIcon,
-	DotIcon,
+	DotOutlineIcon,
 	LinkSimpleHorizontalIcon,
 } from "@phosphor-icons/react";
 import type { Lemma } from "../data/Lemma";
@@ -33,7 +33,7 @@ export default function LemmaTile(
 		>
 			<div className="flex">
 				{collapsed === undefined
-					? <DotIcon />
+					? <DotOutlineIcon weight="fill" />
 					: (
 						<div
 							className="hover"
