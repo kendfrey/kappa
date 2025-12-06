@@ -323,7 +323,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 		if ((e.target as HTMLElement).tagName === "INPUT")
 			return;
 
-		if ((e.ctrlKey || e.metaKey) && e.key === "z")
+		if ((e.ctrlKey || e.metaKey) && e.key === "z" || e.key === "Backspace")
 		{
 			updateCoordinatedState(s =>
 			{
