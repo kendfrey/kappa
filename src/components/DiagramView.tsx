@@ -339,10 +339,12 @@ export default function DiagramView(
 							ctx.setLineDash([4, 6]);
 
 						const angle = Math.atan2(rule.to.y - rule.from.y, rule.to.x - rule.from.x);
+						const startX = (rule.from.x + 0.5) * scale + Math.cos(angle) * 8;
+						const startY = (rule.from.y + 0.5) * scale + Math.sin(angle) * 8;
 						const tipX = (rule.to.x + 0.5) * scale - Math.cos(angle) * 8;
 						const tipY = (rule.to.y + 0.5) * scale - Math.sin(angle) * 8;
 						ctx.beginPath();
-						ctx.moveTo((rule.from.x + 0.5) * scale, (rule.from.y + 0.5) * scale);
+						ctx.moveTo(startX, startY);
 						ctx.lineTo(tipX, tipY);
 						ctx.stroke();
 						ctx.setLineDash([]);
