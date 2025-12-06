@@ -621,7 +621,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 		let name: string;
 		for (let i = 1;; i++)
 		{
-			name = `Lemma ${i}`;
+			name = `lemma${i}`;
 			if (!workspace.lemmas.some(l => l.name === name))
 				break;
 		}
@@ -690,7 +690,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 		let name: string;
 		for (let i = 1;; i++)
 		{
-			name = `Axiom ${i}`;
+			name = `axiom${i}`;
 			if (!workspace.lemmas.some(l => l.name === name))
 				break;
 		}
