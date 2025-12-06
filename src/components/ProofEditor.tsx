@@ -161,6 +161,14 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 		return [dragLemmas, altDragLemmas];
 	}, [workspace.lemmas]);
 
+	let currentStepDescription = null;
+	if (coordinatedState.current.index > 0)
+	{
+		const step = coordinatedState.proof[coordinatedState.current.side]?.[1][coordinatedState.current.index - 1];
+		if (step?.type === "lemma")
+			currentStepDescription = workspace.lemmas.find(l => l.id === step.id)?.name ?? step.id;
+	}
+
 	const canDeleteSide = coordinatedState.proof.lhs !== null && coordinatedState.proof.rhs !== null;
 
 	const canLemma = useMemo(
@@ -772,9 +780,41 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 				</button>
 				{ZoomControls(updateOptions)}
 			</div>
-			<div className="editor-panel">
-				<div className="flex floating-toolbar">
-					<div>
+			<div className="editor">
+				<DiagramView
+					diagram={diagram ?? Diagram(1, 1)}
+					dragAnchor={coordinatedState.dragAnchor ?? coordinatedState.dragCursor}
+					dragColumn={tool === "column" ? coordinatedState.rowCol : undefined}
+					dragRow={tool === "row" ? coordinatedState.rowCol : undefined}
+					cursor={cursor}
+					scale={options.scale}
+					theme={options.theme}
+					onClick={onClick}
+					onPointerDown={onPointerDown}
+					onPointerUp={onPointerUp}
+					onPointerMove={onPointerMove}
+					onPointerLeave={onPointerLeave}
+				/>
+			</div>
+			<div className="flex column navbar">
+				<div className="flex" style={{ alignItems: "center" }}>
+					<span style={{ flex: 1 }}>{currentStepDescription}</span>
+					{canLemma
+						? (
+							<button className="text-button" onClick={makeLemma}>
+								<CirclesThreeIcon weight="fill" />
+								Make Lemma
+							</button>
+						)
+						: canAxiom
+						? (
+							<button className="text-button" onClick={makeAxiom}>
+								<LinkSimpleHorizontalIcon />
+								Make Axiom
+							</button>
+						)
+						: null}
+					<div className="flex" style={{ flex: 1, justifyContent: "end" }}>
 						<button
 							onClick={() =>
 							{
@@ -789,113 +829,82 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 						</button>
 					</div>
 				</div>
-				<div className="editor">
-					<DiagramView
-						diagram={diagram ?? Diagram(1, 1)}
-						dragAnchor={coordinatedState.dragAnchor ?? coordinatedState.dragCursor}
-						dragColumn={tool === "column" ? coordinatedState.rowCol : undefined}
-						dragRow={tool === "row" ? coordinatedState.rowCol : undefined}
-						cursor={cursor}
-						scale={options.scale}
-						theme={options.theme}
-						onClick={onClick}
-						onPointerDown={onPointerDown}
-						onPointerUp={onPointerUp}
-						onPointerMove={onPointerMove}
-						onPointerLeave={onPointerLeave}
+				<div className="flex" style={{ alignItems: "center" }}>
+					{canDeleteSide && (
+						<button
+							onClick={() =>
+							{
+								updateCoordinatedState(s =>
+								{
+									if (s.proof.rhs == null)
+										return;
+
+									s.proof.lhs = null;
+									s.lhsDiagrams = [];
+									if (s.current.side === "lhs")
+										s.current = { side: "rhs", index: s.proof.rhs[1].length };
+								});
+							}}
+						>
+							<TrashIcon />
+						</button>
+					)}
+					<Timeline
+						length={(coordinatedState.proof.lhs?.[1].length ?? -1) + 1}
+						current={coordinatedState.current.side === "lhs" ? coordinatedState.current.index : undefined}
+						onSetCurrent={i =>
+							updateCoordinatedState(s =>
+							{
+								s.current = { side: "lhs", index: i };
+							})}
 					/>
+					<button
+						onClick={() =>
+						{
+							updateCoordinatedState(s =>
+							{
+								const tmp = s.proof.lhs;
+								s.proof.lhs = s.proof.rhs;
+								s.proof.rhs = tmp;
+								const tmpDiagrams = s.lhsDiagrams;
+								s.lhsDiagrams = s.rhsDiagrams;
+								s.rhsDiagrams = tmpDiagrams;
+								s.current.side = s.current.side === "lhs" ? "rhs" : "lhs";
+							});
+						}}
+					>
+						<ArrowsLeftRightIcon />
+					</button>
+					<Timeline
+						length={(coordinatedState.proof.rhs?.[1].length ?? -1) + 1}
+						current={coordinatedState.current.side === "rhs" ? coordinatedState.current.index : undefined}
+						direction="rtl"
+						onSetCurrent={i =>
+							updateCoordinatedState(s =>
+							{
+								s.current = { side: "rhs", index: i };
+							})}
+					/>
+					{canDeleteSide && (
+						<button
+							onClick={() =>
+							{
+								updateCoordinatedState(s =>
+								{
+									if (s.proof.lhs == null)
+										return;
+
+									s.proof.rhs = null;
+									s.rhsDiagrams = [];
+									if (s.current.side === "rhs")
+										s.current = { side: "lhs", index: s.proof.lhs[1].length };
+								});
+							}}
+						>
+							<TrashIcon />
+						</button>
+					)}
 				</div>
-			</div>
-			{canLemma
-				? (
-					<button className="text-button" style={{ alignSelf: "center" }} onClick={makeLemma}>
-						<CirclesThreeIcon weight="fill" />
-						Make Lemma
-					</button>
-				)
-				: canAxiom
-				? (
-					<button className="text-button" style={{ alignSelf: "center" }} onClick={makeAxiom}>
-						<LinkSimpleHorizontalIcon />
-						Make Axiom
-					</button>
-				)
-				: null}
-			<div className="flex" style={{ alignItems: "center", padding: "var(--gap)" }}>
-				{canDeleteSide && (
-					<button
-						onClick={() =>
-						{
-							updateCoordinatedState(s =>
-							{
-								if (s.proof.rhs == null)
-									return;
-
-								s.proof.lhs = null;
-								s.lhsDiagrams = [];
-								if (s.current.side === "lhs")
-									s.current = { side: "rhs", index: s.proof.rhs[1].length };
-							});
-						}}
-					>
-						<TrashIcon />
-					</button>
-				)}
-				<Timeline
-					length={(coordinatedState.proof.lhs?.[1].length ?? -1) + 1}
-					current={coordinatedState.current.side === "lhs" ? coordinatedState.current.index : undefined}
-					onSetCurrent={i =>
-						updateCoordinatedState(s =>
-						{
-							s.current = { side: "lhs", index: i };
-						})}
-				/>
-				<button
-					onClick={() =>
-					{
-						updateCoordinatedState(s =>
-						{
-							const tmp = s.proof.lhs;
-							s.proof.lhs = s.proof.rhs;
-							s.proof.rhs = tmp;
-							const tmpDiagrams = s.lhsDiagrams;
-							s.lhsDiagrams = s.rhsDiagrams;
-							s.rhsDiagrams = tmpDiagrams;
-							s.current.side = s.current.side === "lhs" ? "rhs" : "lhs";
-						});
-					}}
-				>
-					<ArrowsLeftRightIcon />
-				</button>
-				<Timeline
-					length={(coordinatedState.proof.rhs?.[1].length ?? -1) + 1}
-					current={coordinatedState.current.side === "rhs" ? coordinatedState.current.index : undefined}
-					direction="rtl"
-					onSetCurrent={i =>
-						updateCoordinatedState(s =>
-						{
-							s.current = { side: "rhs", index: i };
-						})}
-				/>
-				{canDeleteSide && (
-					<button
-						onClick={() =>
-						{
-							updateCoordinatedState(s =>
-							{
-								if (s.proof.lhs == null)
-									return;
-
-								s.proof.rhs = null;
-								s.rhsDiagrams = [];
-								if (s.current.side === "rhs")
-									s.current = { side: "lhs", index: s.proof.lhs[1].length };
-							});
-						}}
-					>
-						<TrashIcon />
-					</button>
-				)}
 			</div>
 		</div>
 	);

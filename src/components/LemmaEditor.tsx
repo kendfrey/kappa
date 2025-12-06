@@ -68,6 +68,14 @@ export default function LemmaEditor(
 		: undefined;
 	const [proposedDragRule, setProposedDragRule] = useState<DragRule>();
 
+	let currentStepDescription = null;
+	if (current > 0)
+	{
+		const step = lemma.steps?.[current - 1];
+		if (step?.type === "lemma")
+			currentStepDescription = workspace.lemmas.find(l => l.id === step.id)?.name ?? step.id;
+	}
+
 	const mainRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() =>
@@ -201,30 +209,40 @@ export default function LemmaEditor(
 				</button>
 				{ZoomControls(updateOptions)}
 			</div>
-			<div className="editor-panel">
-				<div className="flex floating-toolbar">
-					<div>
-						<button>
-							<CirclesThreeIcon
-								weight="fill"
-								onClick={() =>
+			<div className="editor">
+				<DiagramView
+					diagram={diagrams[current]}
+					scale={options.scale}
+					theme={options.theme}
+					dragRules={dragRules}
+					proposedDragRule={proposedDragRule}
+					onPointerDown={onPointerDown}
+					onPointerUp={onPointerUp}
+					onPointerMove={onPointerMove}
+				/>
+			</div>
+			<div className="flex column navbar">
+				<div className="flex" style={{ alignItems: "center" }}>
+					<span style={{ flex: 1 }}>{currentStepDescription}</span>
+					<div className="flex" style={{ flex: 1, justifyContent: "end" }}>
+						<button
+							onClick={() =>
+							{
+								const proof: Proof = lemma.steps === null
+									? { lhs: [lemma.lhs, []], rhs: [lemma.rhs, []] }
+									: {
+										lhs: [lemma.lhs, lemma.steps.slice(0, current)],
+										rhs: [lemma.rhs, lemma.steps.slice(current).map(reverseStep).reverse()],
+									};
+								setSelection({ type: "proof", index: workspace.proofs.length });
+								updateWorkspace(w =>
 								{
-									const proof: Proof = lemma.steps === null
-										? { lhs: [lemma.lhs, []], rhs: [lemma.rhs, []] }
-										: {
-											lhs: [lemma.lhs, lemma.steps.slice(0, current)],
-											rhs: [lemma.rhs, lemma.steps.slice(current).map(reverseStep).reverse()],
-										};
-									setSelection({ type: "proof", index: workspace.proofs.length });
-									updateWorkspace(w =>
-									{
-										w.proofs.push(proof);
-									});
-								}}
-							/>
+									w.proofs.push(proof);
+								});
+							}}
+						>
+							<CirclesThreeIcon weight="fill" />
 						</button>
-					</div>
-					<div>
 						<button
 							onClick={() =>
 							{
@@ -239,20 +257,6 @@ export default function LemmaEditor(
 						</button>
 					</div>
 				</div>
-				<div className="editor">
-					<DiagramView
-						diagram={diagrams[current]}
-						scale={options.scale}
-						theme={options.theme}
-						dragRules={dragRules}
-						proposedDragRule={proposedDragRule}
-						onPointerDown={onPointerDown}
-						onPointerUp={onPointerUp}
-						onPointerMove={onPointerMove}
-					/>
-				</div>
-			</div>
-			<div className="flex" style={{ alignItems: "center", padding: "var(--gap)" }}>
 				<Timeline length={diagrams.length} current={current} onSetCurrent={setCurrent} />
 			</div>
 		</div>
