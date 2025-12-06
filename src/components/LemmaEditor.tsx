@@ -3,7 +3,7 @@ import { CirclesThreeIcon, ScribbleIcon, TrashIcon } from "@phosphor-icons/react
 import { produce } from "immer";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { height, width } from "../data/Diagram";
-import type { DragRule } from "../data/Lemma";
+import { displayAxioms, type DragRule } from "../data/Lemma";
 import type { Options } from "../data/Options";
 import type { Proof } from "../data/Proof";
 import { applyStep, reverseStep } from "../data/ProofStep";
@@ -191,13 +191,10 @@ export default function LemmaEditor(
 						});
 					}}
 				/>
+				<div style={{ width: "1em" }} />
 				{isAxiom
 					? <Checkbox label="Track usages" checked={track} onChange={setTrack} />
-					: Object.entries(lemma.axioms)
-						.filter(([axiom]) => !workspace.ignoredAxioms[axiom])
-						.map(([axiom, count]) =>
-							`${workspace.lemmas.find(l => l.id === axiom)?.name ?? axiom}: ${count}`
-						).join(" - ")}
+					: displayAxioms(lemma.axioms, workspace)}
 				<div style={{ flex: 1 }} />
 				<button onClick={deleteLemma}>
 					<TrashIcon />

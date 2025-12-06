@@ -15,7 +15,7 @@ import {
 import { produce } from "immer";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Diagram, findDraggableSegment, get, getArc, getSignature, getTrans, height, width } from "../data/Diagram";
-import type { DragRule, Lemma } from "../data/Lemma";
+import { calculateAxioms, displayAxioms, type DragRule, type Lemma } from "../data/Lemma";
 import type { Options } from "../data/Options";
 import type { Point } from "../data/Point";
 import type { Proof } from "../data/Proof";
@@ -102,6 +102,15 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 			o.selectedColour = c;
 		});
 	}
+
+	const axioms = useMemo(() =>
+		displayAxioms(
+			calculateAxioms([
+				...coordinatedState.proof.lhs?.[1] ?? [],
+				...coordinatedState.proof.rhs?.[1] ?? [],
+			], workspace),
+			workspace,
+		), [coordinatedState.proof, workspace]);
 
 	let diagram: Diagram | undefined;
 	let editable: boolean;
@@ -651,17 +660,6 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 			);
 		}
 
-		const axioms: Record<string, number> = {};
-		for (const step of steps.filter(s => s.type === "lemma"))
-		{
-			for (const [axiom, count] of Object.entries(workspace.lemmas.find(l => l.id === step.id)?.axioms ?? {}))
-			{
-				if (axioms[axiom] === undefined)
-					axioms[axiom] = 0;
-
-				axioms[axiom] += count;
-			}
-		}
 		const lemma: Lemma = {
 			id,
 			name,
@@ -670,7 +668,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 			steps,
 			forwardRules: [],
 			reverseRules: [],
-			axioms,
+			axioms: calculateAxioms(steps, workspace),
 		};
 
 		setSelection({ type: "lemma", index: workspace.lemmas.length });
@@ -757,6 +755,8 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 							</button>
 						</>
 					)}
+				<div style={{ width: "1em" }} />
+				{axioms}
 				<div style={{ flex: 1 }} />
 				<button
 					onClick={() =>
