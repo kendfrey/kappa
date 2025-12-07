@@ -219,6 +219,7 @@ export default function LemmaEditor(
 					onPointerDown={onPointerDown}
 					onPointerUp={onPointerUp}
 					onPointerMove={onPointerMove}
+					cursor={dragRules === undefined ? "not-allowed" : undefined}
 				/>
 			</div>
 			<div className="flex column navbar">
