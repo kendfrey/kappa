@@ -14,18 +14,14 @@ export default function Checkbox(
 		<label
 			ref={ref}
 			className="flex"
-			style={{
-				borderRadius: "var(--border-radius)",
-				paddingLeft: "var(--gap)",
-				paddingRight: "var(--border-radius)",
-				cursor: "pointer",
-			}}
+			style={{ height: "fit-content", cursor: "pointer" }}
+			onClick={e => e.stopPropagation()}
 		>
 			<input
 				type="checkbox"
 				checked={checked}
 				onChange={e => onChange(e.target.checked)}
-				style={{ width: 0, margin: 0, marginRight: "calc(-1 * var(--gap))" }}
+				style={{ width: 0, height: 0, margin: 0, marginRight: "calc(-1 * var(--gap))" }}
 			/>
 			{checked ? <CheckCircleIcon weight={weight} /> : <CircleIcon weight={weight} />}
 			{label}

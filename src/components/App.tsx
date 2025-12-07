@@ -258,6 +258,16 @@ export default function App()
 								w.collapsedLemmas[folder.name] = true;
 						});
 					}}
+					onEnabledChange={enabled =>
+					{
+						if (i !== undefined)
+						{
+							updateWorkspace(w =>
+							{
+								w.lemmas[i].enabled = enabled;
+							});
+						}
+					}}
 				/>,
 				...unfoldLemmas(folder.children, hidden || collapsed),
 			];

@@ -7,10 +7,11 @@ import {
 } from "@phosphor-icons/react";
 import type { Lemma } from "../data/Lemma";
 import type { Theme } from "../data/Options";
+import Checkbox from "./Checkbox";
 import DiagramView from "./DiagramView";
 
 export default function LemmaTile(
-	{ name, lemma, collapsed, hidden, selected, dependency, theme, onClick, onCollapseToggle }: {
+	{ name, lemma, collapsed, hidden, selected, dependency, theme, onClick, onCollapseToggle, onEnabledChange }: {
 		name: string;
 		lemma: Lemma | undefined;
 		collapsed: boolean | undefined;
@@ -20,6 +21,7 @@ export default function LemmaTile(
 		theme: Theme;
 		onClick?: () => void;
 		onCollapseToggle?: () => void;
+		onEnabledChange?: (enabled: boolean) => void;
 	},
 )
 {
@@ -37,7 +39,7 @@ export default function LemmaTile(
 					: (
 						<div
 							className="hover"
-							style={{ borderRadius: "var(--border-radius)", lineHeight: 0 }}
+							style={{ borderRadius: "var(--border-radius)", lineHeight: 0, cursor: "pointer" }}
 							onClick={e =>
 							{
 								e.stopPropagation();
@@ -47,7 +49,20 @@ export default function LemmaTile(
 							{collapsed ? <CaretRightIcon /> : <CaretDownIcon />}
 						</div>
 					)}
-				{name}
+				<span style={lemma?.enabled ?? true ? undefined : { opacity: 0.5, textDecoration: "line-through" }}>
+					{name}
+				</span>
+				<div style={{ flex: 1 }} />
+				{lemma && (
+					<Checkbox
+						label=""
+						checked={lemma.enabled}
+						onChange={checked =>
+						{
+							onEnabledChange?.(checked);
+						}}
+					/>
+				)}
 			</div>
 			{lemma && (
 				<div className="flex" style={{ alignItems: "center" }}>

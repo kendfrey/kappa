@@ -132,7 +132,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 	{
 		const dragLemmas = new Map<string, [Lemma, Transform, boolean][]>();
 		const altDragLemmas = new Map<string, [Lemma, Transform, boolean][]>();
-		for (const lemma of workspace.lemmas)
+		for (const lemma of workspace.lemmas.filter(l => l.enabled))
 		{
 			addRules(lemma.forwardRules, false);
 			addRules(lemma.reverseRules, true);
@@ -676,6 +676,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 			steps,
 			forwardRules: [],
 			reverseRules: [],
+			enabled: true,
 			axioms: calculateAxioms(steps, workspace),
 		};
 
@@ -708,6 +709,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 			steps: null,
 			forwardRules: [],
 			reverseRules: [],
+			enabled: true,
 			axioms: { [id]: 1 },
 		};
 

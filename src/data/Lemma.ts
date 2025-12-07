@@ -11,6 +11,7 @@ export type Lemma = {
 	steps: ProofStep[] | null;
 	forwardRules: DragRule[];
 	reverseRules: DragRule[];
+	enabled: boolean;
 	axioms: Record<string, number>;
 };
 

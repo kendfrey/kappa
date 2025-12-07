@@ -31,11 +31,11 @@
 }
 
 button, select, option, .tile, .hover, .menu > *:not(.menu) {
-	&:hover:not(:has(.hover:hover)) {
+	&:hover:not(:has(.hover:hover, input:hover)) {
 		background-color: var(--highlight-1);
 	}
 
-	&:active:not(:has(.hover:active)) {
+	&:active:not(:has(.hover:active, input:active)) {
 		background-color: var(--highlight-2);
 	}
 }
@@ -177,4 +177,8 @@ button.section-header {
 .tile {
 	padding: var(--gap);
 	border-radius: var(--border-radius);
+
+	&:not(:hover) label {
+		visibility: hidden;
+	}
 }

@@ -43,6 +43,7 @@ export const testWorkspace: Workspace = {
 		steps: null,
 		forwardRules: [],
 		reverseRules: [],
+		enabled: true,
 		axioms: { "477f6187-7528-4d7c-923a-9d49d503ecb0": 1 },
 	}],
 	proofs: [],
