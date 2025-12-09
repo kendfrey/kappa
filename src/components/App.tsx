@@ -63,19 +63,10 @@ export default function App()
 		setSelection(undefined);
 	}
 
-	function exportImport()
-	{
-		menuRef.current?.hidePopover();
-
-		const current = JSON.stringify(workspace);
-		const result = prompt("Copy this string or paste one to import:", current);
-		if (result?.trim() && result !== current)
-			setWorkspace(JSON.parse(result) as Workspace, true);
-	}
-
 	const menuRef = useRef<HTMLDivElement>(null);
 	const optionsDialogRef = useRef<HTMLDialogElement>(null);
 	const helpDialogRef = useRef<HTMLDialogElement>(null);
+	const exportImportDialogRef = useRef<HTMLDialogElement>(null);
 	const resetWorkspaceRef = useRef<HTMLDivElement>(null);
 	const resetWorkspaceTimeoutRef = useRef<number>(0);
 
@@ -291,6 +282,16 @@ export default function App()
 							<OptionsDialog options={options} updateOptions={updateOptions} />
 						</Dialog>
 						<Dialog title="Help" ref={helpDialogRef}>TODO</Dialog>
+						<Dialog title="Export/Import" ref={exportImportDialogRef}>
+							Copy this string or paste one to import:
+							<input
+								value={JSON.stringify(workspace)}
+								onChange={e =>
+								{
+									setWorkspace(JSON.parse(e.target.value) as Workspace, true);
+								}}
+							/>
+						</Dialog>
 						<button popoverTarget="menu">
 							<ListIcon />
 						</button>
@@ -303,7 +304,7 @@ export default function App()
 								<QuestionIcon />
 								Help
 							</div>
-							<div onClick={exportImport}>
+							<div onClick={() => exportImportDialogRef.current?.showModal()}>
 								<FileArrowUpIcon />
 								Export/Import...
 							</div>
