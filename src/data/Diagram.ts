@@ -252,26 +252,26 @@ export function findDraggableSegment(
 	};
 }
 
-export function isDraggableSegmentValid(diagram: Diagram, trans: Transform, length: number): boolean
+export function isDraggableSegmentValid(diagram: Diagram, trans: Transform, length: number): string | undefined
 {
 	const topLeftTile = getTrans(diagram, { x: 0, y: 0 }, trans);
 	const bottomLeftTile = getTrans(diagram, { x: 0, y: 1 }, trans);
 	if (topLeftTile === undefined || bottomLeftTile === undefined)
-		return false;
+		return "The targeted line segment is out of bounds.";
 
 	switch (topLeftTile.type)
 	{
 		case "-":
 		case "b":
 			if (bottomLeftTile.type !== " ")
-				return false;
+				return "The targeted line segment cannot be moved without causing a discontinuity.";
 			break;
 		case "p":
 			if (bottomLeftTile.type !== "|" && bottomLeftTile.type !== "d")
-				return false;
+				return "The targeted line segment cannot be moved without causing a discontinuity.";
 			break;
 		default:
-			return false;
+			return "The targeted line segment cannot be moved without causing a discontinuity.";
 	}
 
 	for (let x = 1; x < length; x++)
@@ -279,45 +279,45 @@ export function isDraggableSegmentValid(diagram: Diagram, trans: Transform, leng
 		const topTile = getTrans(diagram, { x, y: 0 }, trans);
 		const bottomTile = getTrans(diagram, { x, y: 1 }, trans);
 		if (topTile === undefined || bottomTile === undefined)
-			return false;
+			return "The targeted line segment is out of bounds.";
 
 		switch (topTile.type)
 		{
 			case "-":
 				if (bottomTile.type !== " ")
-					return false;
+					return "The targeted line segment cannot be moved without causing a discontinuity.";
 				break;
 			case "%":
 			case "$":
 				if (bottomTile.type !== "|")
-					return false;
+					return "The targeted line segment cannot be moved without causing a discontinuity.";
 				break;
 			default:
-				return false;
+				return "The targeted line segment cannot be moved without causing a discontinuity.";
 		}
 	}
 
 	const topRightTile = getTrans(diagram, { x: length, y: 0 }, trans);
 	const bottomRightTile = getTrans(diagram, { x: length, y: 1 }, trans);
 	if (topRightTile === undefined || bottomRightTile === undefined)
-		return false;
+		return "The targeted line segment is out of bounds.";
 
 	switch (topRightTile.type)
 	{
 		case "-":
 		case "d":
 			if (bottomRightTile.type !== " ")
-				return false;
+				return "The targeted line segment cannot be moved without causing a discontinuity.";
 			break;
 		case "q":
 			if (bottomRightTile.type !== "|" && bottomRightTile.type !== "b")
-				return false;
+				return "The targeted line segment cannot be moved without causing a discontinuity.";
 			break;
 		default:
-			return false;
+			return "The targeted line segment cannot be moved without causing a discontinuity.";
 	}
 
-	return true;
+	return undefined;
 }
 
 export function dragSegment(diagram: Diagram, trans: Transform, length: number)

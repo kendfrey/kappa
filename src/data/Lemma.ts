@@ -21,12 +21,12 @@ export type DragRule = {
 	altMode: boolean;
 };
 
-export function calculateAxioms(steps: ProofStep[], workspace: Workspace): Record<string, number>
+export function calculateAxioms(steps: ProofStep[], lemmas: Lemma[]): Record<string, number>
 {
 	const axioms: Record<string, number> = {};
 	for (const step of steps.filter(s => s.type === "lemma"))
 	{
-		for (const [axiom, count] of Object.entries(workspace.lemmas.find(l => l.id === step.id)?.axioms ?? {}))
+		for (const [axiom, count] of Object.entries(lemmas.find(l => l.id === step.id)?.axioms ?? {}))
 		{
 			if (axioms[axiom] === undefined)
 				axioms[axiom] = 0;

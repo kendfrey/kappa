@@ -108,7 +108,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 			calculateAxioms([
 				...coordinatedState.proof.lhs?.[1] ?? [],
 				...coordinatedState.proof.rhs?.[1] ?? [],
-			], workspace),
+			], workspace.lemmas),
 			workspace,
 		), [coordinatedState.proof, workspace]);
 
@@ -623,7 +623,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 		const diagrams = side === "lhs" ? s.lhsDiagrams : s.rhsDiagrams;
 		const diagram = diagrams[s.proof[side][1].length];
 
-		if (!isValid(diagram, step, workspace.lemmas))
+		if (isValid(diagram, step, workspace.lemmas) !== undefined)
 			return false;
 
 		s.proof[side][1].push(step);
@@ -677,7 +677,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 			forwardRules: [],
 			reverseRules: [],
 			enabled: true,
-			axioms: calculateAxioms(steps, workspace),
+			axioms: calculateAxioms(steps, workspace.lemmas),
 		};
 
 		setSelection({ type: "lemma", index: workspace.lemmas.length });

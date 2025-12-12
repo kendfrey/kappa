@@ -71,7 +71,7 @@ export type ProofStep =
 	| AddRowStep
 	| RemoveRowStep;
 
-export function isValid(diagram: Diagram, step: ProofStep, context: Lemma[]): boolean
+export function isValid(diagram: Diagram, step: ProofStep, context: Lemma[]): string | undefined
 {
 	switch (step.type)
 	{
@@ -81,41 +81,60 @@ export function isValid(diagram: Diagram, step: ProofStep, context: Lemma[]): bo
 		{
 			const lemma = context.find(l => l.id === step.id);
 			if (lemma === undefined)
-				return false;
+				return `Lemma with ID "${step.id}" does not exist.`;
 
-			return isSubdiagram(
-				step.reverse ? lemma.rhs : lemma.lhs,
-				step.reverse ? lemma.lhs : lemma.rhs,
-				diagram,
-				step.trans,
-				step.colourMap,
-			);
+			if (
+				!isSubdiagram(
+					step.reverse ? lemma.rhs : lemma.lhs,
+					step.reverse ? lemma.lhs : lemma.rhs,
+					diagram,
+					step.trans,
+					step.colourMap,
+				)
+			)
+			{
+				return `The targeted location does not match the ${step.reverse ? "right" : "left"}-hand side of `
+					+ `"${lemma.name}".`;
+			}
+			return undefined;
 		}
 		case "paint":
 		{
 			const [arc, terminated] = getArc(diagram, step, step.segment);
-			return terminated && arc.every(([point, seg]) => get(diagram, point)?.colours[seg] === step.from);
+			if (!terminated)
+				return "Painting an arc on the perimeter of the diagram is not allowed.";
+			if (!arc.every(([point, seg]) => get(diagram, point)?.colours[seg] === step.from))
+				return `The painted arc does not match the expected colour (${step.from}).`;
+			return undefined;
 		}
 		case "add-column":
-			return step.index >= 0 && step.index <= width(diagram);
+			if (step.index < 0 || step.index > width(diagram))
+				return `Column index ${step.index} is out of bounds.`;
+			return undefined;
 		case "remove-column":
 			for (let i = 0; i < height(diagram); i++)
 			{
 				const tile = get(diagram, { x: step.index, y: i });
-				if (tile === undefined || (tile.type !== " " && tile.type !== "-"))
-					return false;
+				if (tile === undefined)
+					return `Column index ${step.index} is out of bounds.`;
+				if (tile.type !== " " && tile.type !== "-")
+					return `Column ${step.index} cannot be removed without causing a discontinuity.`;
 			}
-			return true;
+			return undefined;
 		case "add-row":
-			return step.index >= 0 && step.index <= height(diagram);
+			if (step.index < 0 || step.index > height(diagram))
+				return `Row index ${step.index} is out of bounds.`;
+			return undefined;
 		case "remove-row":
 			for (let i = 0; i < width(diagram); i++)
 			{
 				const tile = get(diagram, { x: i, y: step.index });
-				if (tile === undefined || (tile.type !== " " && tile.type !== "|"))
-					return false;
+				if (tile === undefined)
+					return `Row index ${step.index} is out of bounds.`;
+				if (tile.type !== " " && tile.type !== "|")
+					return `Row ${step.index} cannot be removed without causing a discontinuity.`;
 			}
-			return true;
+			return undefined;
 		default:
 			unreachable(step);
 	}

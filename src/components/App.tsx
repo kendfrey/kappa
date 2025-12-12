@@ -8,6 +8,7 @@ import {
 	FileDashedIcon,
 	GearIcon,
 	IconContext,
+	ListChecksIcon,
 	ListIcon,
 	PlusIcon,
 	QuestionIcon,
@@ -17,7 +18,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Diagram, getSignature, isContinuous } from "../data/Diagram";
 import type { Lemma } from "../data/Lemma";
 import { defaultOptions } from "../data/Options";
-import { type Workspace } from "../data/Workspace";
+import { validate, type Workspace } from "../data/Workspace";
 import { axiomsOnlyWorkspace, defaultWorkspace, emptyWorkspace, preludeWorkspace } from "../data/workspaces";
 import { useImmerLocalStorage } from "../hooks";
 import DiagramEditor from "./DiagramEditor";
@@ -262,7 +263,7 @@ export default function App()
 						</Dialog>
 						<Dialog title="Help" ref={helpDialogRef}>TODO</Dialog>
 						<Dialog title="Export/Import" ref={exportImportDialogRef}>
-							Copy this string or paste one to import:
+							Copy this string to export your workspace or paste one to import another workspace:
 							<input
 								value={JSON.stringify(workspace)}
 								onChange={e =>
@@ -282,6 +283,16 @@ export default function App()
 							<div onClick={() => helpDialogRef.current?.showModal()}>
 								<QuestionIcon />
 								Help
+							</div>
+							<div
+								onClick={() =>
+								{
+									menuRef.current?.hidePopover();
+									alert(validate(workspace));
+								}}
+							>
+								<ListChecksIcon />
+								Validate Workspace
 							</div>
 							<div onClick={() => exportImportDialogRef.current?.showModal()}>
 								<FileArrowUpIcon />
