@@ -5,23 +5,26 @@ import {
 	DotOutlineIcon,
 	LinkSimpleHorizontalIcon,
 } from "@phosphor-icons/react";
+import { memo } from "react";
 import type { Lemma } from "../data/Lemma";
 import type { Theme } from "../data/Options";
+import type { Workspace } from "../data/Workspace";
+import type { Updater } from "../hooks";
 import Checkbox from "./Checkbox";
 import DiagramView from "./DiagramView";
 
-export default function LemmaTile(
-	{ name, lemma, collapsed, hidden, selected, dependency, theme, onClick, onCollapseToggle, onEnabledChange }: {
+export const LemmaTile_ = memo(function LemmaTile(
+	{ name, index, lemma, collapsed, hidden, selected, dependency, theme, updateWorkspace, setSelection }: {
 		name: string;
+		index: number | undefined;
 		lemma: Lemma | undefined;
 		collapsed: boolean | undefined;
 		hidden: boolean;
 		selected: boolean;
 		dependency: boolean;
 		theme: Theme;
-		onClick?: () => void;
-		onCollapseToggle?: () => void;
-		onEnabledChange?: (enabled: boolean) => void;
+		updateWorkspace: Updater<Workspace>;
+		setSelection: (selection: { type: "lemma"; index: number; } | undefined) => void;
 	},
 )
 {
@@ -30,7 +33,11 @@ export default function LemmaTile(
 			className="flex column tile"
 			data-selected={selected}
 			data-conflict={dependency}
-			onClick={onClick}
+			onClick={() =>
+			{
+				if (index !== undefined)
+					setSelection(selected ? undefined : { type: "lemma", index });
+			}}
 			style={{ overflow: "hidden", display: hidden ? "none" : undefined }}
 		>
 			<div className="flex">
@@ -43,7 +50,13 @@ export default function LemmaTile(
 							onClick={e =>
 							{
 								e.stopPropagation();
-								onCollapseToggle?.();
+								updateWorkspace(w =>
+								{
+									if (w.collapsedLemmas[name])
+										delete w.collapsedLemmas[name];
+									else
+										w.collapsedLemmas[name] = true;
+								});
 							}}
 						>
 							{collapsed ? <CaretRightIcon /> : <CaretDownIcon />}
@@ -59,7 +72,13 @@ export default function LemmaTile(
 						checked={lemma.enabled}
 						onChange={checked =>
 						{
-							onEnabledChange?.(checked);
+							if (index !== undefined)
+							{
+								updateWorkspace(w =>
+								{
+									w.lemmas[index].enabled = checked;
+								});
+							}
 						}}
 					/>
 				)}
@@ -73,4 +92,6 @@ export default function LemmaTile(
 			)}
 		</div>
 	);
-}
+});
+
+export default LemmaTile_;

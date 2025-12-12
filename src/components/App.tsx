@@ -228,6 +228,7 @@ export default function App()
 			return [
 				<LemmaTile
 					key={i ?? folder.name}
+					index={i}
 					name={folder.name}
 					lemma={folder.lemma?.[0]}
 					collapsed={folder.children.length > 0 ? collapsed : undefined}
@@ -235,31 +236,8 @@ export default function App()
 					selected={selected}
 					dependency={i !== undefined && (dependencies?.lemmas.has(i) ?? false)}
 					theme={options.theme}
-					onClick={() =>
-					{
-						if (i !== undefined)
-							setSelection(selected ? undefined : { type: "lemma", index: i });
-					}}
-					onCollapseToggle={() =>
-					{
-						updateWorkspace(w =>
-						{
-							if (w.collapsedLemmas[folder.name])
-								delete w.collapsedLemmas[folder.name];
-							else
-								w.collapsedLemmas[folder.name] = true;
-						});
-					}}
-					onEnabledChange={enabled =>
-					{
-						if (i !== undefined)
-						{
-							updateWorkspace(w =>
-							{
-								w.lemmas[i].enabled = enabled;
-							});
-						}
-					}}
+					updateWorkspace={updateWorkspace}
+					setSelection={setSelection}
 				/>,
 				...unfoldLemmas(folder.children, hidden || collapsed),
 			];
@@ -267,7 +245,7 @@ export default function App()
 	}
 
 	return (
-		<IconContext.Provider value={{ size: 20, weight: "bold" }}>
+		<IconContext.Provider value={useMemo(() => ({ size: 20, weight: "bold" }), [])}>
 			<div className="flex" style={{ height: "100vh", gap: 0 }}>
 				<div
 					className="flex column"

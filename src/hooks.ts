@@ -1,6 +1,5 @@
 import { produce } from "immer";
-import { useCallback, useState } from "react";
-import { useLocalStorage } from "usehooks-ts";
+import { useCallback, useEffect, useState } from "react";
 
 export type Updater<T> = (recipe: (draft: T) => void) => void;
 
@@ -25,12 +24,35 @@ type SerializableValue =
 export function useImmerLocalStorage<T extends SerializableValue>(
 	key: string,
 	defaultValue: T,
-): [T, Updater<T>, () => void]
+): [T, Updater<T>]
 {
-	const [value, setValue, removeValue] = useLocalStorage(key, defaultValue);
+	const [value, setValue] = useState(() =>
+	{
+		const storedValue = localStorage.getItem(key);
+		if (storedValue !== null)
+		{
+			try
+			{
+				return JSON.parse(storedValue) as T;
+			}
+			catch
+			{
+				// Ignore parse errors
+			}
+		}
+
+		return defaultValue;
+	});
+
 	const updateValue = useCallback((recipe: (draft: T) => void) =>
 	{
 		setValue(t => produce(t, recipe));
 	}, [setValue]);
-	return [value, updateValue, removeValue];
+
+	useEffect(() =>
+	{
+		localStorage.setItem(key, JSON.stringify(value));
+	}, [value, key]);
+
+	return [value, updateValue];
 }
