@@ -17,7 +17,8 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Diagram, getSignature, isContinuous } from "../data/Diagram";
 import type { Lemma } from "../data/Lemma";
 import { defaultOptions } from "../data/Options";
-import { defaultWorkspace, emptyWorkspace, testWorkspace, type Workspace } from "../data/Workspace";
+import { type Workspace } from "../data/Workspace";
+import { axiomsOnlyWorkspace, defaultWorkspace, emptyWorkspace, preludeWorkspace } from "../data/workspaces";
 import { useImmerLocalStorage } from "../hooks";
 import DiagramEditor from "./DiagramEditor";
 import DiagramView from "./DiagramView";
@@ -340,10 +341,19 @@ export default function App()
 									onClick={() =>
 									{
 										menuRef.current?.hidePopover();
-										setWorkspace(testWorkspace);
+										setWorkspace(axiomsOnlyWorkspace);
 									}}
 								>
-									Test (default)
+									Axioms Only
+								</div>
+								<div
+									onClick={() =>
+									{
+										menuRef.current?.hidePopover();
+										setWorkspace(preludeWorkspace);
+									}}
+								>
+									Prelude (default)
 								</div>
 							</div>
 						</div>
