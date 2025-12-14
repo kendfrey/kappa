@@ -19,7 +19,13 @@ import { Diagram, getSignature, isContinuous } from "../data/Diagram";
 import type { Lemma } from "../data/Lemma";
 import { defaultOptions } from "../data/Options";
 import { validate, type Workspace } from "../data/Workspace";
-import { axiomsOnlyWorkspace, defaultWorkspace, emptyWorkspace, preludeWorkspace } from "../data/workspaces";
+import {
+	axiomsOnlyWorkspace,
+	defaultWorkspace,
+	emptyWorkspace,
+	exampleProofsWorkspace,
+	preludeWorkspace,
+} from "../data/workspaces";
 import { useImmerLocalStorage } from "../hooks";
 import DiagramEditor from "./DiagramEditor";
 import DiagramView from "./DiagramView";
@@ -343,6 +349,15 @@ export default function App()
 									}}
 								>
 									Prelude (default)
+								</div>
+								<div
+									onClick={() =>
+									{
+										menuRef.current?.hidePopover();
+										setWorkspace(exampleProofsWorkspace);
+									}}
+								>
+									Example Proofs
 								</div>
 							</div>
 						</div>

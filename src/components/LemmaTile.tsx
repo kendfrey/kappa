@@ -62,10 +62,18 @@ export const LemmaTile_ = memo(function LemmaTile(
 							{collapsed ? <CaretRightIcon /> : <CaretDownIcon />}
 						</div>
 					)}
-				<span style={lemma?.enabled ?? true ? undefined : { opacity: 0.5, textDecoration: "line-through" }}>
+				<span
+					title={name}
+					style={{
+						flex: 1,
+						textOverflow: "ellipsis",
+						whiteSpace: "nowrap",
+						overflow: "hidden",
+						...(lemma?.enabled ?? true ? undefined : { opacity: 0.5, textDecoration: "line-through" }),
+					}}
+				>
 					{name}
 				</span>
-				<div style={{ flex: 1 }} />
 				{lemma && (
 					<Checkbox
 						label=""
