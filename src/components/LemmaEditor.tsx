@@ -189,6 +189,7 @@ export default function LemmaEditor(
 					value={name}
 					data-conflict={name !== workspace.lemmas[index].name}
 					style={{ width: 240 }}
+					title="Change the name of this lemma"
 					onChange={e =>
 					{
 						setName(e.target.value);
@@ -201,16 +202,24 @@ export default function LemmaEditor(
 				/>
 				<div style={{ width: "1em" }} />
 				{isAxiom
-					? <Checkbox label="Track usages" checked={track} onChange={setTrack} />
+					? (
+						<Checkbox
+							label="Track usages"
+							title="Count the number of times this axiom is used in each proof"
+							checked={track}
+							onChange={setTrack}
+						/>
+					)
 					: displayAxioms(lemma.axioms, workspace)}
 				<div style={{ flex: 1 }} />
-				<button onClick={deleteLemma}>
+				<button title="Delete this lemma" onClick={deleteLemma}>
 					<TrashIcon />
 				</button>
 				{ZoomControls(updateOptions)}
 			</div>
 			<div className="editor">
 				<DiagramView
+					title="Click and drag to create drag and poke gestures for use in proofs"
 					diagram={diagrams[current]}
 					scale={options.scale}
 					theme={options.theme}
@@ -227,6 +236,7 @@ export default function LemmaEditor(
 					<span style={{ flex: 1 }}>{currentStepDescription}</span>
 					<div className="flex" style={{ flex: 1, justifyContent: "end" }}>
 						<button
+							title="Open a copy of this proof"
 							onClick={() =>
 							{
 								const proof: Proof = lemma.steps === null
@@ -245,6 +255,7 @@ export default function LemmaEditor(
 							<CirclesThreeIcon weight="fill" />
 						</button>
 						<button
+							title="Open a copy of this diagram"
 							onClick={() =>
 							{
 								setSelection({ type: "diagram", index: workspace.diagrams.length });

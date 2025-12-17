@@ -80,6 +80,7 @@ function UnsetDiagram({ w, signature, dragSignature, onDrop }: {
 	return (
 		<div
 			className="flex"
+			title="Drag and drop a diagram here to set the target of this proof"
 			style={{
 				width: w * 16,
 				maxWidth: 128,

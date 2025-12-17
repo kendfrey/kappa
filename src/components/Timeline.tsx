@@ -35,6 +35,7 @@ export default function Timeline({ length, current, direction, onSetCurrent }: {
 
 	return (
 		<div
+			title="Click or drag to navigate through the steps of this proof"
 			style={{
 				display: "grid",
 				flex: 1,

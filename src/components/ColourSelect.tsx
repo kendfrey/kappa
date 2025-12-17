@@ -11,6 +11,7 @@ export default function ColourSelect(
 			value={colour}
 			onChange={e => setColour(parseInt(e.target.value))}
 			style={{ backgroundColor: theme.colours[colour] }}
+			title="Select a colour"
 		>
 			{theme.colours.map((c, i) => <option key={i} value={i} style={{ backgroundColor: c }} />)}
 		</select>

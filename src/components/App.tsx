@@ -283,15 +283,16 @@ export default function App()
 							<ListIcon />
 						</button>
 						<div id="menu" ref={menuRef} className="menu" popover="auto">
-							<div onClick={() => optionsDialogRef.current?.showModal()}>
+							<div title="Open options dialog" onClick={() => optionsDialogRef.current?.showModal()}>
 								<GearIcon />
 								Options
 							</div>
-							<div onClick={() => helpDialogRef.current?.showModal()}>
+							<div title="Open help dialog" onClick={() => helpDialogRef.current?.showModal()}>
 								<QuestionIcon />
 								Help
 							</div>
 							<div
+								title="Check all lemmas and proofs for correctness"
 								onClick={() =>
 								{
 									menuRef.current?.hidePopover();
@@ -301,7 +302,10 @@ export default function App()
 								<ListChecksIcon />
 								Validate Workspace
 							</div>
-							<div onClick={() => exportImportDialogRef.current?.showModal()}>
+							<div
+								title="Save your work or restore previous work"
+								onClick={() => exportImportDialogRef.current?.showModal()}
+							>
 								<FileArrowUpIcon />
 								Export/Import...
 							</div>
@@ -325,6 +329,7 @@ export default function App()
 								onMouseLeave={hideResetWorkspace}
 							>
 								<div
+									title="Start from scratch"
 									onClick={() =>
 									{
 										menuRef.current?.hidePopover();
@@ -334,6 +339,7 @@ export default function App()
 									Empty
 								</div>
 								<div
+									title="Just the minimum necessary axioms"
 									onClick={() =>
 									{
 										menuRef.current?.hidePopover();
@@ -343,6 +349,7 @@ export default function App()
 									Axioms Only
 								</div>
 								<div
+									title="A basic set of lemmas for diagram manipulation"
 									onClick={() =>
 									{
 										menuRef.current?.hidePopover();
@@ -352,6 +359,7 @@ export default function App()
 									Prelude (default)
 								</div>
 								<div
+									title="A collection of example proofs"
 									onClick={() =>
 									{
 										menuRef.current?.hidePopover();
@@ -361,6 +369,7 @@ export default function App()
 									Example Proofs
 								</div>
 								<div
+									title="Non-obvious diagrams of the unknot"
 									onClick={() =>
 									{
 										menuRef.current?.hidePopover();
@@ -398,6 +407,7 @@ export default function App()
 							{unfoldLemmas(lemmaTree, false)}
 							<button
 								className="text-button section-header"
+								title="Drag and drop a diagram here to start a new proof"
 								onClick={() =>
 									updateOptions(o =>
 									{
@@ -505,6 +515,7 @@ export default function App()
 							<button
 								className="text-button"
 								style={{ alignSelf: "start" }}
+								title="Create a new blank diagram"
 								onClick={() =>
 								{
 									setSelection({ type: "diagram", index: workspace.diagrams.length });

@@ -2,9 +2,12 @@ import { CheckCircleIcon, CircleIcon } from "@phosphor-icons/react";
 import { useRef } from "react";
 import { useHover } from "usehooks-ts";
 
-export default function Checkbox(
-	{ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void; },
-)
+export default function Checkbox({ label, title, checked, onChange }: {
+	label: string;
+	title?: string;
+	checked: boolean;
+	onChange: (checked: boolean) => void;
+})
 {
 	const ref = useRef<HTMLLabelElement>(null);
 	const hover = useHover(ref as React.RefObject<HTMLLabelElement>); // https://github.com/juliencrn/usehooks-ts/issues/663
@@ -15,6 +18,7 @@ export default function Checkbox(
 			ref={ref}
 			className="flex"
 			style={{ height: "fit-content", cursor: "pointer" }}
+			title={title}
 			onClick={e => e.stopPropagation()}
 		>
 			<input

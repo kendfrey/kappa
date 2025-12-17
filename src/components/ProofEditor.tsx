@@ -717,19 +717,39 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 				{editable
 					? (
 						<>
-							<button onClick={() => setTool("drag")} data-selected={tool === "drag"}>
+							<button
+								title="Click and drag to manipulate the diagram"
+								onClick={() => setTool("drag")}
+								data-selected={tool === "drag"}
+							>
 								<HandIcon />
 							</button>
-							<button onClick={() => setTool("poke")} data-selected={tool === "poke"}>
+							<button
+								title="Click to apply non-dragging (poke) modifications"
+								onClick={() => setTool("poke")}
+								data-selected={tool === "poke"}
+							>
 								<HandTapIcon />
 							</button>
-							<button onClick={() => setTool("paint")} data-selected={tool === "paint"}>
+							<button
+								title="Paint arcs"
+								onClick={() => setTool("paint")}
+								data-selected={tool === "paint"}
+							>
 								<PaintBrushHouseholdIcon />
 							</button>
-							<button onClick={() => setTool("column")} data-selected={tool === "column"}>
+							<button
+								title="Insert or remove columns"
+								onClick={() => setTool("column")}
+								data-selected={tool === "column"}
+							>
 								<ArrowsOutLineHorizontalIcon />
 							</button>
-							<button onClick={() => setTool("row")} data-selected={tool === "row"}>
+							<button
+								title="Insert or remove rows"
+								onClick={() => setTool("row")}
+								data-selected={tool === "row"}
+							>
 								<ArrowsOutLineVerticalIcon />
 							</button>
 							<ColourSelect colour={colour} setColour={setColour} theme={options.theme} />
@@ -738,6 +758,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 					: (
 						<>
 							<button
+								title="Remove all steps after this point"
 								onClick={() =>
 								{
 									updateCoordinatedState(s =>
@@ -759,6 +780,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 				{axioms}
 				<div style={{ flex: 1 }} />
 				<button
+					title="Delete this proof"
 					onClick={() =>
 					{
 						setSelection(undefined);
@@ -774,6 +796,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 			</div>
 			<div className="editor">
 				<DiagramView
+					title="Manipulate the diagram to create a proof"
 					diagram={diagram ?? Diagram(1, 1)}
 					dragAnchor={coordinatedState.dragAnchor ?? coordinatedState.dragCursor}
 					dragColumn={tool === "column" ? coordinatedState.rowCol : undefined}
@@ -792,14 +815,22 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 					<span style={{ flex: 1 }}>{currentStepDescription}</span>
 					{canLemma
 						? (
-							<button className="text-button" onClick={makeLemma}>
+							<button
+								className="text-button"
+								title="Complete this proof and convert it to a lemma"
+								onClick={makeLemma}
+							>
 								<CirclesThreeIcon weight="fill" />
 								Make Lemma
 							</button>
 						)
 						: canAxiom
 						? (
-							<button className="text-button" onClick={makeAxiom}>
+							<button
+								className="text-button"
+								title="Create a new axiom equating these two diagrams"
+								onClick={makeAxiom}
+							>
 								<LinkSimpleHorizontalIcon />
 								Make Axiom
 							</button>
@@ -807,6 +838,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 						: null}
 					<div className="flex" style={{ flex: 1, justifyContent: "end" }}>
 						<button
+							title="Open a copy of this diagram"
 							onClick={() =>
 							{
 								setSelection({ type: "diagram", index: workspace.diagrams.length });
@@ -823,6 +855,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 				<div className="flex" style={{ alignItems: "center" }}>
 					{canDeleteSide && (
 						<button
+							title="Delete the left-hand side of this proof"
 							onClick={() =>
 							{
 								updateCoordinatedState(s =>
@@ -850,6 +883,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 							})}
 					/>
 					<button
+						title="Swap the left-hand and right-hand sides of this proof"
 						onClick={() =>
 						{
 							updateCoordinatedState(s =>
@@ -878,6 +912,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 					/>
 					{canDeleteSide && (
 						<button
+							title="Delete the right-hand side of this proof"
 							onClick={() =>
 							{
 								updateCoordinatedState(s =>

@@ -7,6 +7,7 @@ export default function ZoomControls(updateOptions: Updater<Options>)
 	return (
 		<>
 			<button
+				title="Zoom out"
 				onClick={() =>
 					updateOptions(o =>
 					{
@@ -16,6 +17,7 @@ export default function ZoomControls(updateOptions: Updater<Options>)
 				<MagnifyingGlassMinusIcon />
 			</button>
 			<button
+				title="Zoom in"
 				onClick={() =>
 					updateOptions(o =>
 					{

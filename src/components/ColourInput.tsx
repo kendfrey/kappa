@@ -5,7 +5,7 @@ export function ColourInput(
 )
 {
 	return (
-		<div className="colour-input" style={{ backgroundColor: value }}>
+		<div className="colour-input" style={{ backgroundColor: value }} title="Click to choose a colour">
 			<input type="color" defaultValue={value} onChange={onChange} />
 		</div>
 	);

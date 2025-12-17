@@ -11,7 +11,7 @@ export default function OptionsDialog(
 
 	return (
 		<>
-			<label>
+			<label title="Select a UI theme">
 				<span>Theme</span>
 				<select
 					value={options.theme.type}
@@ -50,8 +50,7 @@ export default function OptionsDialog(
 								o.theme.background = e.target.value;
 							});
 						}}
-					>
-					</ColourInput>
+					/>
 					{options.theme.colours.map((c, i) => (
 						<ColourInput
 							key={i}
@@ -63,8 +62,7 @@ export default function OptionsDialog(
 									o.theme.colours[i] = e.target.value;
 								});
 							}}
-						>
-						</ColourInput>
+						/>
 					))}
 				</div>
 			)}

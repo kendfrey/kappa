@@ -11,7 +11,7 @@ export default function Dialog(
 				<div className="flex column" style={{ width: 400 }}>
 					<div className="flex" style={{ justifyContent: "space-between", alignItems: "center" }}>
 						<h3 style={{ margin: 0 }}>{title}</h3>
-						<button formMethod="dialog">
+						<button title="Close dialog" formMethod="dialog">
 							<XIcon />
 						</button>
 					</div>

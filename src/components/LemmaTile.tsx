@@ -46,6 +46,7 @@ export const LemmaTile_ = memo(function LemmaTile(
 					: (
 						<div
 							className="hover"
+							title="Expand or collapse this namespace"
 							style={{ borderRadius: "var(--border-radius)", lineHeight: 0, cursor: "pointer" }}
 							onClick={e =>
 							{
@@ -77,6 +78,7 @@ export const LemmaTile_ = memo(function LemmaTile(
 				{lemma && (
 					<Checkbox
 						label=""
+						title="Use this lemma for manipulating diagrams"
 						checked={lemma.enabled}
 						onChange={checked =>
 						{

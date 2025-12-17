@@ -292,21 +292,30 @@ export default function DiagramEditor({ workspace, updateWorkspace, options, upd
 	return (
 		<div className="flex column main" tabIndex={0}>
 			<div className="flex toolbar">
-				<button onClick={() => setTool("draw")} data-selected={tool === "draw"}>
+				<button
+					title="Draw arcs or erase using the right mouse button"
+					onClick={() => setTool("draw")}
+					data-selected={tool === "draw"}
+				>
 					<PencilIcon />
 				</button>
-				<button onClick={() => setTool("paint")} data-selected={tool === "paint"}>
+				<button title="Paint arcs" onClick={() => setTool("paint")} data-selected={tool === "paint"}>
 					<PaintBrushHouseholdIcon />
 				</button>
-				<button onClick={() => setTool("column")} data-selected={tool === "column"}>
+				<button
+					title="Insert or remove columns"
+					onClick={() => setTool("column")}
+					data-selected={tool === "column"}
+				>
 					<ArrowsOutLineHorizontalIcon />
 				</button>
-				<button onClick={() => setTool("row")} data-selected={tool === "row"}>
+				<button title="Insert or remove rows" onClick={() => setTool("row")} data-selected={tool === "row"}>
 					<ArrowsOutLineVerticalIcon />
 				</button>
 				<ColourSelect colour={colour} setColour={setColour} theme={options.theme} />
 				<div style={{ flex: 1 }} />
 				<button
+					title="Delete this diagram"
 					onClick={() =>
 					{
 						setSelection(undefined);
@@ -322,6 +331,7 @@ export default function DiagramEditor({ workspace, updateWorkspace, options, upd
 			</div>
 			<div className="editor">
 				<DiagramView
+					title="Edit the diagram"
 					diagram={coordinatedState.diagram}
 					dragColumn={tool === "column" ? coordinatedState.rowCol : undefined}
 					dragRow={tool === "row" ? coordinatedState.rowCol : undefined}

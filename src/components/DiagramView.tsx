@@ -18,6 +18,7 @@ export interface DiagramMouseEvent
 
 export interface DiagramViewProps
 {
+	title?: string;
 	diagram: Diagram;
 	dragAnchor?: Point;
 	dragColumn?: number;
@@ -36,6 +37,7 @@ export interface DiagramViewProps
 
 export default function DiagramView(
 	{
+		title,
 		diagram,
 		dragAnchor,
 		dragColumn,
@@ -413,6 +415,7 @@ export default function DiagramView(
 
 	return (
 		<canvas
+			title={title}
 			style={{ display: "block", cursor: cursor ?? "revert-layer", maxWidth: maxWidth ?? "revert-layer" }}
 			ref={ref}
 			onPointerDown={e =>
