@@ -86,7 +86,7 @@ export default function LemmaEditor(
 
 	function onPointerDown(e: DiagramMouseEvent)
 	{
-		if (dragRules === undefined)
+		if (dragRules === undefined || e.raw.button !== 0)
 			return;
 
 		setProposedDragRule({ from: { x: e.x, y: e.y }, to: { x: e.x, y: e.y }, altMode: e.raw.shiftKey });
@@ -97,7 +97,7 @@ export default function LemmaEditor(
 		setProposedDragRule(undefined);
 
 		if (
-			dragRules === undefined || proposedDragRule === undefined
+			dragRules === undefined || proposedDragRule === undefined || e.raw.button !== 0
 			|| e.x < 0 || e.y < 0 || e.x >= width(diagrams[current]) || e.y >= height(diagrams[current])
 		)
 		{
