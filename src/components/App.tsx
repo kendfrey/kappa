@@ -25,6 +25,7 @@ import {
 	emptyWorkspace,
 	exampleProofsWorkspace,
 	preludeWorkspace,
+	puzzlesWorkspace,
 } from "../data/workspaces";
 import { useImmerLocalStorage } from "../hooks";
 import DiagramEditor from "./DiagramEditor";
@@ -257,7 +258,7 @@ export default function App()
 				<div
 					className="flex column"
 					style={{
-						width: 330,
+						width: 350,
 						padding: "var(--gap)",
 						borderRight: "var(--border)",
 						backgroundColor: "var(--highlight-1)",
@@ -358,6 +359,15 @@ export default function App()
 									}}
 								>
 									Example Proofs
+								</div>
+								<div
+									onClick={() =>
+									{
+										menuRef.current?.hidePopover();
+										setWorkspace(puzzlesWorkspace);
+									}}
+								>
+									Unknotting Puzzles
 								</div>
 							</div>
 						</div>
