@@ -28,7 +28,6 @@ export interface DiagramViewProps
 	scale: number;
 	maxWidth?: number;
 	theme: Theme;
-	onClick?: (e: DiagramMouseEvent) => void;
 	onPointerDown?: (e: DiagramMouseEvent) => void;
 	onPointerUp?: (e: DiagramMouseEvent) => void;
 	onPointerMove?: (e: DiagramMouseEvent) => void;
@@ -47,7 +46,6 @@ export default function DiagramView(
 		scale,
 		maxWidth,
 		theme,
-		onClick,
 		onPointerDown,
 		onPointerUp,
 		onPointerMove,
@@ -417,10 +415,6 @@ export default function DiagramView(
 		<canvas
 			style={{ display: "block", cursor: cursor ?? "revert-layer", maxWidth: maxWidth ?? "revert-layer" }}
 			ref={ref}
-			onClick={e =>
-			{
-				onClick?.(getEvent(e));
-			}}
 			onPointerDown={e =>
 			{
 				e.currentTarget.setPointerCapture(e.pointerId);

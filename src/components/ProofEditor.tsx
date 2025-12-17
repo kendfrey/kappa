@@ -217,31 +217,6 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 			mainRef.current?.focus();
 	});
 
-	function onClick(e: DiagramMouseEvent)
-	{
-		if (!editable)
-			return;
-
-		switch (tool)
-		{
-			case "poke":
-			{
-				if (diagram === undefined)
-					return;
-
-				const step = getLemmaDragStep(diagram, { x: e.x, y: e.y }, { x: e.x, y: e.y }, dragLemmas, true);
-				if (step !== undefined)
-				{
-					updateCoordinatedState(s =>
-					{
-						doStep(s, step[0]);
-					});
-				}
-				break;
-			}
-		}
-	}
-
 	function onPointerDown(e: DiagramMouseEvent)
 	{
 		if (!editable)
@@ -258,6 +233,21 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 					s.dragCursor = { x: e.x, y: e.y };
 				});
 				break;
+			case "poke":
+			{
+				if (diagram === undefined)
+					return;
+
+				const step = getLemmaDragStep(diagram, { x: e.x, y: e.y }, { x: e.x, y: e.y }, dragLemmas, true);
+				if (step !== undefined)
+				{
+					updateCoordinatedState(s =>
+					{
+						doStep(s, step[0]);
+					});
+				}
+				break;
+			}
 			case "paint":
 			{
 				if (diagram === undefined)
@@ -268,7 +258,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 					return;
 
 				const from = get(diagram, root[0])?.colours[root[1]];
-				if (from === undefined)
+				if (from === undefined || from === colour)
 					return;
 
 				updateCoordinatedState(s =>
@@ -791,7 +781,6 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 					cursor={cursor}
 					scale={options.scale}
 					theme={options.theme}
-					onClick={onClick}
 					onPointerDown={onPointerDown}
 					onPointerUp={onPointerUp}
 					onPointerMove={onPointerMove}
