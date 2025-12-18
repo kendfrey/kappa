@@ -1,7 +1,6 @@
 import type { Diagram } from "./Diagram";
 import type { Point } from "./Point";
 import type { ProofStep } from "./ProofStep";
-import type { Workspace } from "./Workspace";
 
 export type Lemma = {
 	id: string;
@@ -35,12 +34,4 @@ export function calculateAxioms(steps: ProofStep[], lemmas: Lemma[]): Record<str
 		}
 	}
 	return axioms;
-}
-
-export function displayAxioms(axioms: Record<string, number>, workspace: Workspace): string
-{
-	return Object.entries(axioms)
-		.filter(([axiom]) => !workspace.ignoredAxioms[axiom])
-		.map(([axiom, count]) => `${workspace.lemmas.find(l => l.id === axiom)?.name ?? axiom}: ${count}`)
-		.join(" - ");
 }

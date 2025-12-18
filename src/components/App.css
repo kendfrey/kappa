@@ -134,6 +134,14 @@ label {
 	height: var(--ui-unit);
 }
 
+a {
+	cursor: pointer;
+
+	&:hover {
+		text-decoration: underline;
+	}
+}
+
 .menu {
 	position-area: span-bottom right;
 	width: 200px;

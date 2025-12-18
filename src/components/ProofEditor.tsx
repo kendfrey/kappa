@@ -15,7 +15,7 @@ import {
 import { produce } from "immer";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Diagram, findDraggableSegment, get, getArc, getSignature, getTrans, height, width } from "../data/Diagram";
-import { calculateAxioms, displayAxioms, type DragRule, type Lemma } from "../data/Lemma";
+import { calculateAxioms, type DragRule, type Lemma } from "../data/Lemma";
 import type { Options } from "../data/Options";
 import type { Point } from "../data/Point";
 import type { Proof } from "../data/Proof";
@@ -24,8 +24,10 @@ import { composeTrans, symmetries, Transform, transformPoint } from "../data/Tra
 import type { Workspace } from "../data/Workspace";
 import { type Updater, useImmerState } from "../hooks";
 import type { WorkspaceSelection } from "./App";
+import Axioms from "./Axioms";
 import ColourSelect from "./ColourSelect";
 import DiagramView, { type DiagramMouseEvent } from "./DiagramView";
+import LemmaLink from "./LemmaLink";
 import Timeline from "./Timeline";
 import ZoomControls from "./ZoomControls";
 
@@ -104,13 +106,14 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 	}
 
 	const axioms = useMemo(() =>
-		displayAxioms(
+		Axioms(
 			calculateAxioms([
 				...coordinatedState.proof.lhs?.[1] ?? [],
 				...coordinatedState.proof.rhs?.[1] ?? [],
 			], workspace.lemmas),
 			workspace,
-		), [coordinatedState.proof, workspace]);
+			setSelection,
+		), [coordinatedState.proof, workspace, setSelection]);
 
 	let diagram: Diagram | undefined;
 	let editable: boolean;
@@ -166,7 +169,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 	{
 		const step = coordinatedState.proof[coordinatedState.current.side]?.[1][coordinatedState.current.index - 1];
 		if (step?.type === "lemma")
-			currentStepDescription = workspace.lemmas.find(l => l.id === step.id)?.name ?? step.id;
+			currentStepDescription = LemmaLink(step.id, workspace, setSelection);
 	}
 
 	const canDeleteSide = coordinatedState.proof.lhs !== null && coordinatedState.proof.rhs !== null;

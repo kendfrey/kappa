@@ -3,15 +3,17 @@ import { CirclesThreeIcon, ScribbleIcon, TrashIcon } from "@phosphor-icons/react
 import { produce } from "immer";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { height, width } from "../data/Diagram";
-import { displayAxioms, type DragRule } from "../data/Lemma";
+import { type DragRule } from "../data/Lemma";
 import type { Options } from "../data/Options";
 import type { Proof } from "../data/Proof";
 import { applyStep, reverseStep } from "../data/ProofStep";
 import type { Workspace } from "../data/Workspace";
 import type { Updater } from "../hooks";
 import type { WorkspaceSelection } from "./App";
+import Axioms from "./Axioms";
 import Checkbox from "./Checkbox";
 import DiagramView, { type DiagramMouseEvent } from "./DiagramView";
+import LemmaLink from "./LemmaLink";
 import Timeline from "./Timeline";
 import ZoomControls from "./ZoomControls";
 
@@ -73,7 +75,7 @@ export default function LemmaEditor(
 	{
 		const step = lemma.steps?.[current - 1];
 		if (step?.type === "lemma")
-			currentStepDescription = workspace.lemmas.find(l => l.id === step.id)?.name ?? step.id;
+			currentStepDescription = LemmaLink(step.id, workspace, setSelection);
 	}
 
 	const mainRef = useRef<HTMLDivElement>(null);
@@ -210,7 +212,7 @@ export default function LemmaEditor(
 							onChange={setTrack}
 						/>
 					)
-					: displayAxioms(lemma.axioms, workspace)}
+					: Axioms(lemma.axioms, workspace, setSelection)}
 				<div style={{ flex: 1 }} />
 				<button title="Delete this lemma" onClick={deleteLemma}>
 					<TrashIcon />

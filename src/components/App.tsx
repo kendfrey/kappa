@@ -94,6 +94,19 @@ export default function App()
 
 	const [dependencies, setDependencies] = useState<{ lemmas: Set<number>; proofs: Set<number>; }>();
 
+	function expandIntoView(index: number, workspace: Workspace)
+	{
+		const path = workspace.lemmas[index].name.split(".");
+		let prefix = path[0];
+		for (const part of path.slice(1))
+		{
+			if (workspace.collapsedLemmas[prefix] === true)
+				delete workspace.collapsedLemmas[prefix];
+
+			prefix += "." + part;
+		}
+	}
+
 	useEffect(() =>
 	{
 		if (dependencies === undefined)
@@ -102,17 +115,7 @@ export default function App()
 		updateWorkspace(w =>
 		{
 			for (const i of dependencies.lemmas)
-			{
-				const path = w.lemmas[i].name.split(".");
-				let prefix = path[0];
-				for (const part of path.slice(1))
-				{
-					if (w.collapsedLemmas[prefix] === true)
-						delete w.collapsedLemmas[prefix];
-
-					prefix += "." + part;
-				}
-			}
+				expandIntoView(i, w);
 		});
 	}, [dependencies, updateWorkspace]);
 
@@ -125,6 +128,7 @@ export default function App()
 				{
 					o.lemmasCollapsed = false;
 				});
+				updateWorkspace(w => expandIntoView(selection.index, w));
 				break;
 			case "proof":
 				updateOptions(o =>
@@ -144,7 +148,7 @@ export default function App()
 			0,
 		);
 		setDependencies(undefined);
-	}, [selection, updateOptions]);
+	}, [selection, updateOptions, updateWorkspace]);
 
 	function getMainPanelContent(): React.ReactNode
 	{
