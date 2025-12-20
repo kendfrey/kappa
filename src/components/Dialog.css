@@ -1,8 +1,15 @@
 dialog {
+	box-sizing: border-box;
+	max-height: calc(100vh - 2 * var(--ui-unit));
 	margin-top: var(--ui-unit);
 	padding: var(--border-radius);
 	border: var(--border);
 	border-radius: var(--border-radius);
 	background-color: var(--bg);
 	color: var(--fg);
+
+	&[open] {
+		display: flex;
+		flex-direction: column;
+	}
 }

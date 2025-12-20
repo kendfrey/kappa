@@ -31,6 +31,7 @@ import { useImmerLocalStorage } from "../hooks";
 import DiagramEditor from "./DiagramEditor";
 import DiagramView from "./DiagramView";
 import Dialog from "./Dialog";
+import HelpDialog from "./HelpDialog";
 import LemmaEditor from "./LemmaEditor";
 import LemmaTile from "./LemmaTile";
 import OptionsDialog from "./OptionsDialog";
@@ -257,7 +258,9 @@ export default function App()
 	}
 
 	return (
-		<IconContext.Provider value={useMemo(() => ({ size: 20, weight: "bold" }), [])}>
+		<IconContext.Provider
+			value={useMemo(() => ({ size: 20, weight: "bold", style: { verticalAlign: "middle" } }), [])}
+		>
 			<div className="flex" style={{ height: "100vh", gap: 0 }}>
 				<div
 					className="flex column"
@@ -272,7 +275,9 @@ export default function App()
 						<Dialog title="Options" ref={optionsDialogRef}>
 							<OptionsDialog options={options} updateOptions={updateOptions} />
 						</Dialog>
-						<Dialog title="Help" ref={helpDialogRef}>TODO</Dialog>
+						<Dialog title="Help" width={800} ref={helpDialogRef}>
+							<HelpDialog />
+						</Dialog>
 						<Dialog title="Export/Import" ref={exportImportDialogRef}>
 							Copy this string to export your workspace or paste one to import another workspace:
 							<input
