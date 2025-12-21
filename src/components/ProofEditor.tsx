@@ -23,6 +23,7 @@ import { applyStep, isValid, type ProofStep, reverseStep } from "../data/ProofSt
 import { composeTrans, symmetries, Transform, transformPoint } from "../data/Transform";
 import type { Workspace } from "../data/Workspace";
 import { type Updater, useImmerState } from "../hooks";
+import { randomId } from "../util";
 import type { WorkspaceSelection } from "./App";
 import Axioms from "./Axioms";
 import ColourSelect from "./ColourSelect";
@@ -627,7 +628,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 
 	function makeLemma()
 	{
-		const id = crypto.randomUUID();
+		const id = randomId();
 		let name: string;
 		for (let i = 1;; i++)
 		{
@@ -686,7 +687,7 @@ export default function ProofEditor({ workspace, updateWorkspace, options, updat
 		if (coordinatedState.proof.lhs === null || coordinatedState.proof.rhs === null)
 			return;
 
-		const id = crypto.randomUUID();
+		const id = randomId();
 		let name: string;
 		for (let i = 1;; i++)
 		{
